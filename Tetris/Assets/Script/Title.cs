@@ -23,5 +23,6 @@ public class Title : MonoBehaviour {
 		{
 			Application.LoadLevel("Tetris");
 		}
+
 	}
 }
