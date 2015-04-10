@@ -55,6 +55,9 @@ public class Game : MonoBehaviour {
 	bool rightFlag;
 	bool leftFlag;
 
+
+	bool gameoverFlag;
+
 	public float timer = 0.0f;
 	public float frontTime = 0.0f;
 
@@ -131,6 +134,9 @@ public class Game : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+
+		gameoverFlag = false;
+
 		// ブロックの情報----------------------------------
 		blockI.square = new int [,]{{0,0,1,0,0},
 									{0,0,1,0,0},
@@ -347,158 +353,147 @@ public class Game : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		// 押された瞬間の処理
-		// spaceキーでシーンを切り替える
-		if(Input.GetKeyDown(KeyCode.Space))
-		{
-			Application.LoadLevel("Title");
-		}	
+		if (gameoverFlag == true) {
+			// 押された瞬間の処理
+			// spaceキーでシーンを切り替える
+			if (Input.GetKeyDown (KeyCode.Space)) {
+				Application.LoadLevel ("Title");
+			}	
+		} else {
+			// 時間の取得
+			timer += Time.deltaTime;
 
-		// 時間の取得
-		timer += Time.deltaTime;
-
-		// 削除処理
-		for (int i=19; i>=0; i--) 
-		{
-			int count = 0;
-			for(int j=0;j<10;j++)
-			{
-				if(map[i,j] == 0)
-				{
-					break;
-				}
-				count += 1;
-			}
-
-			if(count == 10)
-			{
-				for(int j=0;j<10;j++)
-				{
-					map[i,j]=0;
-				}
-
-				for(int a = i;a>0;a--)
-				{
-					for(int b=0;b<10;b++)
-					{
-						map[a,b] = map[a-1,b];
-					}
-				}
-			}
-		}
-
-
-		// 確認用
-		if (Input.GetKeyDown (KeyCode.LeftShift))
-		{
 			// 削除処理
-			//Destroy(m_aObject[0,0]);
-		}
-
-		// ブロックを落下させる処理
-		if ((timer - frontTime) > 0.5) 
-		{
-			for (int i=0; i<20; i++) 
-			{
-				for(int j=0;j<10;j++)
-				{
-					if(map[i,j] == 0)
-					{
-						// 色を変える
-						Renderer renderer = m_aObject[i,j].GetComponent<Renderer> ();
-						renderer.material = new Material (renderer.material);
-						renderer.material.color = new Color (0.0f,0.0f,1.0f);
+			for (int i=19; i>=0; i--) {
+				int count = 0;
+				for (int j=0; j<10; j++) {
+					if (map [i, j] == 0) {
+						break;
 					}
-					if(map[i,j] == 1)
-					{
-						// 色を変える
-						Renderer renderer = m_aObject[i,j].GetComponent<Renderer> ();
-						renderer.material = new Material (renderer.material);
-						renderer.material.color = new Color (0.0f,1.0f,1.0f);
+					count += 1;
+				}
+
+				if (count == 10) {
+					for (int j=0; j<10; j++) {
+						map [i, j] = 0;
+					}
+
+					for (int a = i; a>0; a--) {
+						for (int b=0; b<10; b++) {
+							map [a, b] = map [a - 1, b];
+						}
 					}
 				}
 			}
 
-			// 下にブロックがあるかどうか調べる
-			if(myBlock.underBlock+1 < 20 && nowUnder-1 >= 0)
-			{
-				for(int i=0;myBlock.leftBlock+i<=myBlock.rightBlock;i++)
-					{
-						if(map[nowUnder-1,myBlock.leftBlock+i] == 1)
-						{
+
+			// 確認用
+			if (Input.GetKeyDown (KeyCode.LeftShift)) {
+				// 削除処理
+				//Destroy(m_aObject[0,0]);
+			}
+
+			// ブロックを落下させる処理
+			if ((timer - frontTime) > 0.5) {
+				for (int i=0; i<20; i++) {
+					for (int j=0; j<10; j++) {
+						if (map [i, j] == 0) {
+							// 色を変える
+							Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
+							renderer.material = new Material (renderer.material);
+							renderer.material.color = new Color (0.0f, 0.0f, 1.0f);
+						}
+						if (map [i, j] == 1) {
+							// 色を変える
+							Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
+							renderer.material = new Material (renderer.material);
+							renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
+						}
+					}
+				}
+
+				// 下にブロックがあるかどうか調べる
+				if (myBlock.underBlock + 1 < 20 && nowUnder - 1 >= 0) {
+					for (int i=0; myBlock.leftBlock+i<=myBlock.rightBlock; i++) {
+						if (map [nowUnder - 1, myBlock.leftBlock + i] == 1) {
 							underFlag = true;
 							break;
 						}
 					}
-			}
 
-			if(myBlock.underBlock < 20 && underFlag == false)
-			{
-				if(nowUnder<5)
-				{
-					for (int i=0; i<=nowUnder; i++) 
+					if(underFlag == true && myBlock.topBlock<0)
 					{
-						for(int j=0;j<5;j++)
-						{
-							if(myBlock.square[4-i,j] == 1)
-							{
-								// 色を変える
-								Renderer renderer = m_aObject[nowUnder-i+moveY,j+moveX].GetComponent<Renderer> ();
-								renderer.material = new Material (renderer.material);
-								renderer.material.color = new Color (1.0f,0.0f,1.0f);
+						gameoverFlag = true;
+
+						for (int i=0; i<5; i++) {
+							for (int j=0; j<5; j++) {
+								if (myBlock.square [4 - i, j] == 1 && nowUnder - i + moveY > 0) {
+									// 色を変える
+									Renderer renderer = m_aObject [nowUnder - 1 - i + moveY, j + moveX].GetComponent<Renderer> ();
+									renderer.material = new Material (renderer.material);
+									renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
+									
+								}
 							}
 						}
 					}
 				}
-				else
-				{
-					for (int i=0; i<5; i++) 
-					{
-						for(int j=0;j<5;j++)
-						{
-							if(myBlock.square[4-i,j] == 1)
-							{
-								// 色を変える
-								Renderer renderer = m_aObject[nowUnder-i+moveY,j+moveX].GetComponent<Renderer> ();
-								renderer.material = new Material (renderer.material);
-								renderer.material.color = new Color (1.0f,0.0f,1.0f);
+
+				if (myBlock.underBlock < 20 && underFlag == false) {
+					if (nowUnder < 5) {
+						for (int i=0; i<=nowUnder; i++) {
+							for (int j=0; j<5; j++) {
+								if (myBlock.square [4 - i, j] == 1) {
+									// 色を変える
+									Renderer renderer = m_aObject [nowUnder - i + moveY, j + moveX].GetComponent<Renderer> ();
+									renderer.material = new Material (renderer.material);
+									renderer.material.color = new Color (1.0f, 0.0f, 1.0f);
+								}
+							}
+						}
+					} else {
+						for (int i=0; i<5; i++) {
+							for (int j=0; j<5; j++) {
+								if (myBlock.square [4 - i, j] == 1) {
+									// 色を変える
+									Renderer renderer = m_aObject [nowUnder - i + moveY, j + moveX].GetComponent<Renderer> ();
+									renderer.material = new Material (renderer.material);
+									renderer.material.color = new Color (1.0f, 0.0f, 1.0f);
 								
+								}
 							}
 						}
 					}
-				}
 
-			}
-			else
-			{
-				for (int i=0; i<5; i++) 
-				{
-					for(int j=0;j<5;j++)
-					{
-						if(myBlock.square[4-i,j] == 1)
-						{
-							map[nowUnder-1-i+moveY,j+moveX] = 1;							
+				} else {
+					if(myBlock.topBlock<0)
+						gameoverFlag = true;
+
+					for (int i=0; i<5; i++) {
+						for (int j=0; j<5; j++) {
+							if (myBlock.square [4 - i, j] == 1 && (nowUnder - i + moveY)>0) {
+								map [nowUnder - 1 - i + moveY, j + moveX] = 1;							
+							}
 						}
 					}
+
+					nowUnder = 0;
+					// 次のブロックに合わせて値を変更する
+					SetBlockType (nowBlock);
+					moveX = 2;
+					moveY = 0;
+					underFlag = false;
+					rightFlag = false;
+					leftFlag = false;
 				}
 
-				nowUnder = 0;
-				// 次のブロックに合わせて値を変更する
-				SetBlockType(nowBlock);
-				moveX = 2;
-				moveY = 0;
-				underFlag = false;
-				rightFlag = false;
-				leftFlag = false;
-			}
-
-			nowUnder += 1;
-			myBlock.underBlock += 1;
-			myBlock.topBlock += 1;
+				nowUnder += 1;
+				myBlock.underBlock += 1;
+				myBlock.topBlock += 1;
 
 
 
-			/*
+				/*
 
 			// 下にブロックがない時
 			if(y>-10 && map[underBlock+1,leftBlock] ==0)
@@ -534,14 +529,14 @@ public class Game : MonoBehaviour {
 				leftBlock = 4;
 			}*/
 
-			frontTime = timer;
-		}
+				frontTime = timer;
+			}
 
 
 
-		// 右回転をrightShiftキーで行う
-		// ブロックがO型以外の場合に回転処理をするようにする(未)
-		/*
+			// 右回転をrightShiftキーで行う
+			// ブロックがO型以外の場合に回転処理をするようにする(未)
+			/*
 		if (Input.GetKeyDown (KeyCode.RightShift)) 
 		{
 			print ("rightShift push");
@@ -570,10 +565,9 @@ public class Game : MonoBehaviour {
 */
 
 
-		// ブロックの位置を移動させる
-		if(Input.GetKeyDown(KeyCode.D) && myBlock.topBlock>=0)
-		{
-			/*
+			// ブロックの位置を移動させる
+			if (Input.GetKeyDown (KeyCode.D) && myBlock.topBlock >= 0) {
+				/*
 			if(x<1 && map[underBlock,leftBlock+1] ==0)
 			{
 				x+=1.0f;
@@ -581,32 +575,28 @@ public class Game : MonoBehaviour {
 			}
 */
 
-			// 右にブロックがあるかどうか調べる
-			if(myBlock.rightBlock < 9 && myBlock.underBlock < 20)
-			{
-				for(int i=0;myBlock.underBlock-i>myBlock.topBlock;i++)
-				{
-					if(map[myBlock.underBlock-i,myBlock.rightBlock+1] == 1)
-					{
-						rightFlag = true;
-						break;
+				// 右にブロックがあるかどうか調べる
+				if (myBlock.rightBlock < 9 && myBlock.underBlock < 20) {
+					for (int i=0; myBlock.underBlock-i>myBlock.topBlock; i++) {
+						if (map [myBlock.underBlock - i, myBlock.rightBlock + 1] == 1) {
+							rightFlag = true;
+							break;
+						}
 					}
 				}
-			}
 
-			if(myBlock.rightBlock<9 && rightFlag == false)
-			{
-				moveX+=1;
-				myBlock.leftBlock+=1;
-				myBlock.rightBlock+=1;
-				if(leftFlag == true)
-					leftFlag = false;
-			}
+				if (myBlock.rightBlock < 9 && rightFlag == false) {
+					moveX += 1;
+					myBlock.leftBlock += 1;
+					myBlock.rightBlock += 1;
+					if (leftFlag == true)
+						leftFlag = false;
+				}
 
 
-			// ブロックの右移動
-			// ブロックの下に積み上げたブロックがあった場合以外の処理
-			/*
+				// ブロックの右移動
+				// ブロックの下に積み上げたブロックがあった場合以外の処理
+				/*
 			if(rightBlock<9)
 			{
 
@@ -617,10 +607,9 @@ public class Game : MonoBehaviour {
 
 				leftBlock += 1;
 			}*/
-		}	
-		if(Input.GetKeyDown(KeyCode.S) && myBlock.topBlock>=0)
-		{
-			/*
+			}	
+			if (Input.GetKeyDown (KeyCode.S) && myBlock.topBlock >= 0) {
+				/*
 			if(x>-8 && map[underBlock,leftBlock-1] ==0)
 			{
 				x-=1.0f;
@@ -628,31 +617,27 @@ public class Game : MonoBehaviour {
 			}
 			*/
 
-			// 左にブロックがあるかどうか調べる
-			if(myBlock.leftBlock > 0 && myBlock.underBlock < 20)
-			{
-				for(int i=0;myBlock.underBlock-i>myBlock.topBlock;i++)
-				{
-					if(map[myBlock.underBlock-i,myBlock.leftBlock-1] == 1)
-					{
-						leftFlag = true;
-						break;
+				// 左にブロックがあるかどうか調べる
+				if (myBlock.leftBlock > 0 && myBlock.underBlock < 20) {
+					for (int i=0; myBlock.underBlock-i>myBlock.topBlock; i++) {
+						if (map [myBlock.underBlock - i, myBlock.leftBlock - 1] == 1) {
+							leftFlag = true;
+							break;
+						}
 					}
 				}
-			}
 
-			if(myBlock.leftBlock>0 && leftFlag == false)
-			{
-				moveX-=1;
-				myBlock.leftBlock-=1;
-				myBlock.rightBlock-=1;
-				if(rightFlag == true)
-					rightFlag = false;
-			}
+				if (myBlock.leftBlock > 0 && leftFlag == false) {
+					moveX -= 1;
+					myBlock.leftBlock -= 1;
+					myBlock.rightBlock -= 1;
+					if (rightFlag == true)
+						rightFlag = false;
+				}
 
-			// ブロックの左移動
-			// ブロックの下に積み上げたブロックがあった場合以外の処理
-			/*
+				// ブロックの左移動
+				// ブロックの下に積み上げたブロックがあった場合以外の処理
+				/*
 			if(leftBlock>0)
 			{
 				leftBlock -= 1;
@@ -660,24 +645,20 @@ public class Game : MonoBehaviour {
 				map[0,rightBlock] = 0;
 				rightBlock -= 1;
 			}*/
-		}
-		if(Input.GetKeyDown(KeyCode.X))
-		{
-			// 下にブロックがあるかどうか調べる
-			if(myBlock.underBlock+1 < 20)
-			{
-				for(int i=0;myBlock.leftBlock-i>=myBlock.rightBlock;i++)
-				{
-					if(map[myBlock.underBlock+1,myBlock.leftBlock+i] == 1)
-					{
-						underFlag = true;
-						Debug.Log("NO");
-						break;
+			}
+			if (Input.GetKeyDown (KeyCode.X)) {
+				// 下にブロックがあるかどうか調べる
+				if (myBlock.underBlock + 1 < 20) {
+					for (int i=0; myBlock.leftBlock-i>=myBlock.rightBlock; i++) {
+						if (map [myBlock.underBlock + 1, myBlock.leftBlock + i] == 1) {
+							underFlag = true;
+							Debug.Log ("NO");
+							break;
+						}
 					}
 				}
-			}
 
-			/*
+				/*
 			if(myBlock.underBlock+1 < 20 && underFlag == false)
 			{
 				moveY+=1;
@@ -686,15 +667,15 @@ public class Game : MonoBehaviour {
 			}
 */
 
-			/*
+				/*
 			if(y>-10 && map[underBlock+1,leftBlock] ==0)
 			{
 				y-=1.0f;
 				underBlock +=1;
 			}*/
-			// ブロックの下移動(自分で)
-			// ブロックの下に積み上げたブロックがあった場合以外の処理
-			/*
+				// ブロックの下移動(自分で)
+				// ブロックの下に積み上げたブロックがあった場合以外の処理
+				/*
 			if(underBlock <19)
 			{
 				// 現在動かしているブロックの情報をコピーする
@@ -721,10 +702,11 @@ public class Game : MonoBehaviour {
 				}
 
 			}*/
+			}
+
+			// ブロックの位置更新
+			cube.transform.position = new Vector3 (10, y, 0.0f);
+
 		}
-
-		// ブロックの位置更新
-		cube.transform.position = new Vector3 (10,y,0.0f);
-
 	}
 }
