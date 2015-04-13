@@ -39,12 +39,17 @@ public class Game : MonoBehaviour {
 
 	public float timer = 0.0f;
 	public float frontTime = 0.0f;
+	public float downTime = 0.5f;
 
 	public int score=0;
 	public int scoreCount=0;
+	public int scoreLineCount=0;
 
 	int ghostUnder=19;
 	int ghostLeft=0;
+
+	int leftSpace=0;
+	int rightSpace=0;
 
 	private GameObject[,] m_aObject = new GameObject[20,10];
 
@@ -55,15 +60,19 @@ public class Game : MonoBehaviour {
 		switch(nowBlock)
 		{
 		case 0:
-			myBlock.square = new int [,]{{0,0,1,0,0},
-										{0,0,1,0,0},
-										{0,0,1,0,0},
-										{0,0,1,0,0},
-										{0,0,0,0,0}};
+			myBlock.square = new int [,]{{0,1,0,0,0},
+										 {0,1,0,0,0},
+										 {0,1,0,0,0},
+										 {0,1,0,0,0},
+										 {0,0,0,0,0}};
 			myBlock.topBlock = -4;
 			myBlock.underBlock = -1;
-			myBlock.leftBlock = 4;
-			myBlock.rightBlock = 4;
+			myBlock.leftBlock = 3;
+			myBlock.rightBlock = 3;
+
+			leftSpace=0;
+			rightSpace=0;
+
 			break;
 			
 		case 1:
@@ -76,6 +85,10 @@ public class Game : MonoBehaviour {
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 4;
+
+			leftSpace=0;
+			rightSpace=0;
+
 			break;
 			
 		case 2:
@@ -88,6 +101,10 @@ public class Game : MonoBehaviour {
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 5;
+
+			leftSpace=0;
+			rightSpace=1;
+
 			break;
 			
 		case 3:
@@ -100,6 +117,10 @@ public class Game : MonoBehaviour {
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 5;
+
+			leftSpace=1;
+			rightSpace=0;
+
 			break;
 			
 		case 4:
@@ -112,18 +133,26 @@ public class Game : MonoBehaviour {
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 4;
+
+			leftSpace=0;
+			rightSpace=0;
+
 			break;
 			
 		case 5:
 			myBlock.square = new int [,]{{0,0,0,0,0},
-										{0,0,1,0,0},
-										{0,0,1,0,0},
-										{0,0,1,1,0},
-										{0,0,0,0,0}};
+										 {0,1,0,0,0},
+										 {0,1,0,0,0},
+										 {0,1,1,0,0},
+										 {0,0,0,0,0}};
 			myBlock.topBlock = -3;
 			myBlock.underBlock = -1;
-			myBlock.leftBlock = 4;
-			myBlock.rightBlock = 5;
+			myBlock.leftBlock = 3;
+			myBlock.rightBlock = 4;
+
+			leftSpace=0;
+			rightSpace=0;
+
 			break;
 			
 		case 6:
@@ -136,6 +165,10 @@ public class Game : MonoBehaviour {
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 5;
+
+			leftSpace=0;
+			rightSpace=0;
+
 			break;
 			
 		default:
@@ -181,7 +214,8 @@ public class Game : MonoBehaviour {
 		// 初期のブロックの設定
 		nowUnder = 0;
 		SetBlockType ();
-		ghostLeft = myBlock.leftBlock;
+		//ghostLeft = myBlock.leftBlock;
+		ghostLeft = 0;
 	}
 	
 
@@ -197,32 +231,15 @@ public class Game : MonoBehaviour {
 			// 時間の取得
 			timer += Time.deltaTime;
 
-			// 削除処理
-			for (int i=19; i>=0; i--) {
-				int count = 0;
-				for (int j=0; j<10; j++) {
-					if (map [i, j] == 0) {
-						break;
-					}
-					count += 1;
-				}
-
-				if (count == 10) {
-					for (int j=0; j<10; j++) {
-						map [i, j] = 0;
-					}
-
-					for (int a = i; a>0; a--) {
-						for (int b=0; b<10; b++) {
-							map [a, b] = map [a - 1, b];
-						}
-					}
-				}
-			}
+			// テトリミノの速度を経過した時間で変化させる
+			if(timer > 180.0f)
+				downTime=0.3f;
+			else if(timer > 240.0f)
+				downTime=0.2f;
 
 			// ブロックを落下させる＆xボタンで落下させる処理
-			if ((timer - frontTime) > 0.5 || Input.GetKeyDown (KeyCode.X)) {
-				if((timer - frontTime) < 0.5)
+			if ((timer - frontTime) > downTime || Input.GetKeyDown (KeyCode.X)) {
+				if((timer - frontTime) < downTime)
 					scoreCount +=1;
 
 				for (int i=0; i<20; i++) {
@@ -243,44 +260,101 @@ public class Game : MonoBehaviour {
 							renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
 						}
 
-
-						if(ghostUnder > myBlock.underBlock)
-						{
+						else if (map [i, j] == 2) {
 							// 色を変える
-							Renderer renderer = m_aObject [ghostUnder, ghostLeft].GetComponent<Renderer> ();
+							Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
 							renderer.material = new Material (renderer.material);
 							renderer.material.color = new Color (0.8f, 0.8f, 0.8f);
 						}
 					}
 				}
 
-				// ゴースト表示のプログラミング(仮)
-				for(int i=myBlock.leftBlock;i<=myBlock.rightBlock;i++)
+				// ゴースト表示のプログラミング
+				if(myBlock.leftBlock!=ghostLeft)
 				{
-					for(int j=myBlock.underBlock+1;j<=19;j++)
+					for (int i=0; i<20; i++) {
+						for (int j=0; j<10; j++) {
+							if(map[i,j]==2)
+								map[i,j]=0;
+						}
+					}
+					ghostUnder=19;
+					ghostLeft=myBlock.leftBlock;
+
+
+					for(int i=myBlock.leftBlock;i<=myBlock.rightBlock;i++)
 					{
-						if(map[j,i]==1 && ghostUnder > j)
+						for(int j=myBlock.underBlock+1;j<=19;j++)
 						{
-							ghostUnder=j-1;
-							ghostLeft=i;
+							if(map[j,i]==1 && j-1<ghostUnder)
+							{
+								ghostUnder=j-1;
+							}
+						}
+					}
+					// 左下 右下に空白がある場合
+					if(leftSpace!=0 && rightSpace!=0)
+					{
+						if(map[ghostUnder+1,myBlock.leftBlock+1]==0)
+							ghostUnder+=1;
+					}
+					// 左下に空白がある場合
+					else if(leftSpace!=0)
+					{
+						int num = 0;
+						for(int i=1;i<=leftSpace;i++)
+						{
+							if(ghostUnder+i <= 19 && map[ghostUnder+i,myBlock.rightBlock]==0)
+							{
+								num = ghostUnder+i;
+							}
+						}
+						if(num == ghostUnder+leftSpace)
+						{
+							ghostUnder=num;
+						}
+					}
+					// 右下に空白がある場合
+					else if(rightSpace!=0)
+					{
+						int num = 0;
+						for(int i=1;i<=rightSpace;i++)
+						{
+							if(ghostUnder+i <= 19 && map[ghostUnder+i,myBlock.leftBlock]==0)
+							{
+								num = ghostUnder+i;
+							}
+						}
+						if(num == ghostUnder+rightSpace)
+						{
+							ghostUnder=num;
+						}
+					}
+					 
+
+					for(int i=0;i<4;i++)
+					{
+						for(int j=1;j<5;j++)
+						{
+							if(ghostUnder-(3-i)>=0 && myBlock.leftBlock-1+j<=9 && myBlock.square[i,j]==1 &&map[ghostUnder-(3-i),myBlock.leftBlock-1+j]!=1)
+								map[ghostUnder-(3-i),myBlock.leftBlock-1+j]=2;
 						}
 					}
 				}
-				if(ghostUnder==19)
-					ghostLeft=myBlock.leftBlock;
+
 
 				// 下にブロックがあるかどうか調べる
 				if (myBlock.underBlock + 1 < 20 && nowUnder - 1 >= 0) {
-
-					for (int i=0; myBlock.leftBlock+i<=myBlock.rightBlock; i++) {
-						if (map [nowUnder - 1, myBlock.leftBlock + i] == 1) {
+					/*
+					for (int i=myBlock.leftBlock;i<=myBlock.rightBlock; i++) {
+						if (map [myBlock.underBlock, i] == 1) {
 							underFlag = true;
 							break;
 						}
-					}
+					}*/
 
 					// もうつめない場合
-					if(underFlag == true && myBlock.topBlock<0)
+					if(myBlock.underBlock == ghostUnder+1 && myBlock.topBlock<0)
 					{
 						gameoverFlag = true;
 
@@ -298,7 +372,7 @@ public class Game : MonoBehaviour {
 					}
 				}
 
-				if (myBlock.underBlock < 20 && underFlag == false) {
+				if (myBlock.underBlock < 20 && underFlag == false && myBlock.underBlock != ghostUnder+1) {
 					if (nowUnder < 5) {
 						for (int i=0; i<=nowUnder; i++) {
 							for (int j=0; j<5; j++) {
@@ -310,7 +384,8 @@ public class Game : MonoBehaviour {
 								}
 							}
 						}
-					} else {
+					} 
+					else {
 						for (int i=0; i<5; i++) {
 							for (int j=0; j<5; j++) {
 								if (myBlock.square [4 - i, j] == 1) {
@@ -324,7 +399,8 @@ public class Game : MonoBehaviour {
 						}
 					}
 
-				} else {
+				}
+				else {
 					if(myBlock.topBlock<0)
 						gameoverFlag = true;
 
@@ -345,7 +421,34 @@ public class Game : MonoBehaviour {
 					rightFlag = false;
 					leftFlag = false;
 					ghostUnder=19;
-					ghostLeft=myBlock.leftBlock;
+					ghostLeft=0;
+
+
+					// 削除処理
+					for (int i=19; i>=0; i--) {
+						int count = 0;
+						for (int j=0; j<10; j++) {
+							if (map [i, j] == 0) {
+								break;
+							}
+							else if(map [i, j] == 1)
+								count += 1;
+						}
+						
+						if (count == 10) {
+							for (int j=0; j<10; j++) {
+								map [i, j] = 0;
+							}
+							
+							for (int a = i; a>0; a--) {
+								for (int b=0; b<10; b++) {
+									map [a, b] = map [a - 1, b];
+								}
+							}
+							scoreLineCount+=1;
+							i++;
+						}
+					}
 
 					if(scoreCount==0)
 						score+=1;
@@ -354,8 +457,42 @@ public class Game : MonoBehaviour {
 					else
 						score+=18;
 
+					switch(scoreLineCount)
+					{
+					case 1:
+						score+=40;
+						scoreLineCount=0;
+						break;
+
+					case 2:
+						score+=100;
+						scoreLineCount=0;
+						break;
+
+					case 3:
+						score+=300;
+						scoreLineCount=0;
+						break;
+
+					case 4:
+						score+=1200;
+						scoreLineCount=0;
+						break;
+
+					default:
+						scoreLineCount=0;
+						break;
+					}
+
 					Debug.Log(score);
 					scoreCount=0;
+
+					for (int i=0; i<20; i++) {
+						for (int j=0; j<10; j++) {
+							if(map[i,j]==2)
+								map[i,j]=0;
+						}
+					}
 				}
 
 				nowUnder += 1;
@@ -421,6 +558,49 @@ public class Game : MonoBehaviour {
 					myBlock.rightBlock=right+moveX;
 					myBlock.topBlock=myBlock.underBlock-(under-top);
 				}
+
+
+				for(int i=0;i<2;i++)
+				{
+					for(int j=4;j>=0;j--)
+					{
+						//Debug.Log(myBlock.square[j,i]);
+						if(myBlock.square[j,i]==1 && j==3)
+						{
+							leftSpace=0;
+							break;
+						}
+						else if(myBlock.square[j,i]==1)
+						{
+							leftSpace=3-j;
+							break;
+						}
+					}
+				}
+				rightSpace=0;
+				bool rightSpaceFlag=false;
+				for(int i=4;i>1;i--)
+				{
+					for(int j=4;j>=0;j--)
+					{
+						if(myBlock.square[j,i]==1 && j==3)
+						{
+							rightSpace=0;
+							rightSpaceFlag=true;
+							break;
+						}
+						else if(myBlock.square[j,i]==1)
+						{
+							rightSpace=3-j;
+							rightSpaceFlag=true;
+							break;
+						}
+					}
+					if(rightSpaceFlag==true)
+						break;
+				}
+
+
 			}
 
 
