@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+using UnityEngine.UI;
+
 struct BLOCK{
 	public int[,] square;
 	public int leftBlock;
@@ -21,6 +23,9 @@ struct BLOCK{
 };
 
 public class Game : MonoBehaviour {
+	public Text scoreText;
+	public Text gameoverText;
+
 	BLOCK myBlock = new BLOCK();
 
 	// 20*10
@@ -52,6 +57,7 @@ public class Game : MonoBehaviour {
 	int rightSpace=0;
 
 	private GameObject[,] m_aObject = new GameObject[20,10];
+	
 
 	void SetBlockType ()
 	{
@@ -176,6 +182,105 @@ public class Game : MonoBehaviour {
 		}
 	}
 
+	void Ghost()
+	{
+		for (int i=0; i<20; i++) {
+			for (int j=0; j<10; j++) {
+				if(map[i,j]==2)
+					map[i,j]=0;
+			}
+		}
+		ghostUnder=19;
+		ghostLeft=myBlock.leftBlock;
+		
+		
+		for(int i=myBlock.leftBlock;i<=myBlock.rightBlock;i++)
+		{
+			for(int j=myBlock.underBlock+1;j<=19;j++)
+			{
+				if(map[j,i]==1 && j-1<ghostUnder)
+				{
+					ghostUnder=j-1;
+				}
+			}
+		}
+
+		if(ghostUnder+1 <=19)
+		{
+			// 左下 右下に空白がある場合
+			if(leftSpace!=0 && rightSpace!=0)
+			{
+				if(map[ghostUnder+1,myBlock.leftBlock+1]==0)
+					ghostUnder+=1;
+			}
+			// 左下に1つ空白がある場合
+			else if(leftSpace==1)
+			{
+				if(myBlock.rightBlock - myBlock.leftBlock == 1 &&
+				   map[ghostUnder+1,myBlock.rightBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+				else if(myBlock.rightBlock - myBlock.leftBlock == 2 &&
+				        map[ghostUnder+1,myBlock.leftBlock+1]==0 &&
+				        map[ghostUnder+1,myBlock.rightBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+			}
+			// 左下に2つ空白がある場合
+			else if(leftSpace==2)
+			{
+				if(ghostUnder+2 <=19 && map[ghostUnder+1,myBlock.rightBlock]==0 &&
+				   map[ghostUnder+2,myBlock.rightBlock]==0)
+				{
+					ghostUnder+=2;
+				}
+				else if(map[ghostUnder+1,myBlock.rightBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+			}
+			// 右下に1つ空白がある場合
+			else if(rightSpace==1)
+			{	
+				if(myBlock.rightBlock - myBlock.leftBlock == 1 &&
+				   map[ghostUnder+1,myBlock.leftBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+				else if(myBlock.rightBlock - myBlock.leftBlock == 2 &&
+				        map[ghostUnder+1,myBlock.leftBlock+1]==0 &&
+				        map[ghostUnder+1,myBlock.leftBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+			}
+			// 右下に2つ空白がある場合
+			else if(rightSpace==2)
+			{
+				if(ghostUnder+2 <=19 &&	map[ghostUnder+1,myBlock.leftBlock]==0 &&
+				   map[ghostUnder+2,myBlock.leftBlock]==0)
+				{
+					ghostUnder+=2;
+				}
+				else if(map[ghostUnder+1,myBlock.leftBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+			}
+		}
+
+		for(int i=0;i<4;i++)
+		{
+			for(int j=1;j<5;j++)
+			{
+				if(ghostUnder-(3-i)>=0 && myBlock.leftBlock-1+j<=9 && myBlock.square[i,j]==1 &&map[ghostUnder-(3-i),myBlock.leftBlock-1+j]!=1)
+					map[ghostUnder-(3-i),myBlock.leftBlock-1+j]=2;
+			}
+		}
+	}
+
 	// Use this for initialization
 	void Start () {
 
@@ -214,16 +319,24 @@ public class Game : MonoBehaviour {
 		// 初期のブロックの設定
 		nowUnder = 0;
 		SetBlockType ();
-		//ghostLeft = myBlock.leftBlock;
 		ghostLeft = 0;
+
+
+		scoreText = GameObject.Find ("Canvas/TextScore").GetComponent<Text>();
+		scoreText.text = "Score\n"+score;
+		gameoverText = GameObject.Find ("Canvas/TextGameover").GetComponent<Text> ();
+		gameoverText.text = "";
 	}
 	
 
 	// Update is called once per frame
 	void Update () {
+		Resources.UnloadUnusedAssets ();
 		// ゲームオーバーの時
 		// spaceキーでシーンを切り替える
 		if (gameoverFlag == true) {
+			gameoverText.text = "GAMEOVER\npush space";
+
 			if (Input.GetKeyDown (KeyCode.Space)) {
 				Application.LoadLevel ("Title");
 			}	
@@ -272,89 +385,24 @@ public class Game : MonoBehaviour {
 				// ゴースト表示のプログラミング
 				if(myBlock.leftBlock!=ghostLeft)
 				{
-					for (int i=0; i<20; i++) {
-						for (int j=0; j<10; j++) {
-							if(map[i,j]==2)
-								map[i,j]=0;
-						}
-					}
-					ghostUnder=19;
-					ghostLeft=myBlock.leftBlock;
-
-
-					for(int i=myBlock.leftBlock;i<=myBlock.rightBlock;i++)
-					{
-						for(int j=myBlock.underBlock+1;j<=19;j++)
-						{
-							if(map[j,i]==1 && j-1<ghostUnder)
-							{
-								ghostUnder=j-1;
-							}
-						}
-					}
-					// 左下 右下に空白がある場合
-					if(leftSpace!=0 && rightSpace!=0)
-					{
-						if(map[ghostUnder+1,myBlock.leftBlock+1]==0)
-							ghostUnder+=1;
-					}
-					// 左下に空白がある場合
-					else if(leftSpace!=0)
-					{
-						int num = 0;
-						for(int i=1;i<=leftSpace;i++)
-						{
-							if(ghostUnder+i <= 19 && map[ghostUnder+i,myBlock.rightBlock]==0)
-							{
-								num = ghostUnder+i;
-							}
-						}
-						if(num == ghostUnder+leftSpace)
-						{
-							ghostUnder=num;
-						}
-					}
-					// 右下に空白がある場合
-					else if(rightSpace!=0)
-					{
-						int num = 0;
-						for(int i=1;i<=rightSpace;i++)
-						{
-							if(ghostUnder+i <= 19 && map[ghostUnder+i,myBlock.leftBlock]==0)
-							{
-								num = ghostUnder+i;
-							}
-						}
-						if(num == ghostUnder+rightSpace)
-						{
-							ghostUnder=num;
-						}
-					}
-					 
-
-					for(int i=0;i<4;i++)
-					{
-						for(int j=1;j<5;j++)
-						{
-							if(ghostUnder-(3-i)>=0 && myBlock.leftBlock-1+j<=9 && myBlock.square[i,j]==1 &&map[ghostUnder-(3-i),myBlock.leftBlock-1+j]!=1)
-								map[ghostUnder-(3-i),myBlock.leftBlock-1+j]=2;
-						}
-					}
+					Ghost();
 				}
 
 
 				// 下にブロックがあるかどうか調べる
 				if (myBlock.underBlock + 1 < 20 && nowUnder - 1 >= 0) {
-					/*
-					for (int i=myBlock.leftBlock;i<=myBlock.rightBlock; i++) {
-						if (map [myBlock.underBlock, i] == 1) {
-							underFlag = true;
-							break;
+					if(myBlock.underBlock==0)
+					{
+						for (int i=myBlock.leftBlock;i<=myBlock.rightBlock; i++) {
+							if (map [myBlock.underBlock, i] == 1) {
+								underFlag = true;
+								break;
+							}
 						}
-					}*/
+					}
 
 					// もうつめない場合
-					if(myBlock.underBlock == ghostUnder+1 && myBlock.topBlock<0)
+					if(underFlag == true && myBlock.underBlock == ghostUnder+1 && myBlock.topBlock<0)
 					{
 						gameoverFlag = true;
 
@@ -412,17 +460,6 @@ public class Game : MonoBehaviour {
 						}
 					}
 
-					nowUnder = 0;
-					// 次のブロックに合わせて値を変更する
-					SetBlockType ();
-					moveX = 2;
-					moveY = 0;
-					underFlag = false;
-					rightFlag = false;
-					leftFlag = false;
-					ghostUnder=19;
-					ghostLeft=0;
-
 
 					// 削除処理
 					for (int i=19; i>=0; i--) {
@@ -453,10 +490,19 @@ public class Game : MonoBehaviour {
 					if(scoreCount==0)
 						score+=1;
 					else if(scoreCount<18)
-						score+=scoreCount;
+					{
+						if(myBlock.underBlock < scoreCount)
+							score+=myBlock.underBlock;
+						else
+							score+=scoreCount;
+					}
 					else
-						score+=18;
-
+					{
+						if(myBlock.underBlock < scoreCount)
+							score+=myBlock.underBlock;
+						else
+							score+=18;
+					}
 					switch(scoreLineCount)
 					{
 					case 1:
@@ -484,7 +530,6 @@ public class Game : MonoBehaviour {
 						break;
 					}
 
-					Debug.Log(score);
 					scoreCount=0;
 
 					for (int i=0; i<20; i++) {
@@ -493,6 +538,19 @@ public class Game : MonoBehaviour {
 								map[i,j]=0;
 						}
 					}
+
+					nowUnder = 0;
+					// 次のブロックに合わせて値を変更する
+					SetBlockType ();
+					moveX = 2;
+					moveY = 0;
+					underFlag = false;
+					rightFlag = false;
+					leftFlag = false;
+					ghostUnder=19;
+					ghostLeft=0;
+
+					scoreText.text = "Score\n"+score;
 				}
 
 				nowUnder += 1;
@@ -507,7 +565,7 @@ public class Game : MonoBehaviour {
 
 			// 右回転をSpaceキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
-			if (Input.GetKeyDown (KeyCode.Space) && nowBlock != 1) 
+			if (Input.GetKeyDown (KeyCode.Space) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
 			{
 
 				int[,] blockCopy = new int[5,5];
@@ -600,7 +658,7 @@ public class Game : MonoBehaviour {
 						break;
 				}
 
-
+				Ghost();
 			}
 
 
