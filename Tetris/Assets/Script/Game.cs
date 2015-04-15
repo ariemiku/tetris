@@ -163,16 +163,16 @@ public class Game : MonoBehaviour {
 		case 6:
 			myBlock.square = new int [,]{{0,0,0,0,0},
 										{0,0,0,0,0},
-										{0,0,1,0,0},
 										{0,1,1,1,0},
+										{0,0,1,0,0},
 										{0,0,0,0,0}};
 			myBlock.topBlock = -2;
 			myBlock.underBlock = -1;
 			myBlock.leftBlock = 3;
 			myBlock.rightBlock = 5;
 
-			leftSpace=0;
-			rightSpace=0;
+			leftSpace=1;
+			rightSpace=1;
 
 			break;
 			
@@ -222,6 +222,12 @@ public class Game : MonoBehaviour {
 					ghostUnder+=1;
 				}
 				else if(myBlock.rightBlock - myBlock.leftBlock == 2 &&
+				        map[ghostUnder+1,myBlock.rightBlock]==0 &&
+				        nowBlock == 4)
+				{
+					ghostUnder+=1;
+				}
+				else if(myBlock.rightBlock - myBlock.leftBlock == 2 &&
 				        map[ghostUnder+1,myBlock.leftBlock+1]==0 &&
 				        map[ghostUnder+1,myBlock.rightBlock]==0)
 				{
@@ -246,6 +252,12 @@ public class Game : MonoBehaviour {
 			{	
 				if(myBlock.rightBlock - myBlock.leftBlock == 1 &&
 				   map[ghostUnder+1,myBlock.leftBlock]==0)
+				{
+					ghostUnder+=1;
+				}
+				else if(myBlock.rightBlock - myBlock.leftBlock == 2 &&
+				        map[ghostUnder+1,myBlock.leftBlock]==0 &&
+				        nowBlock == 5)
 				{
 					ghostUnder+=1;
 				}
@@ -317,7 +329,7 @@ public class Game : MonoBehaviour {
 	{
 		for (int i=0; i<5; i++) {
 			for (int j=0; j<5; j++) {
-				if (myBlock.square [4 - i, j] == 1) {
+				if (nowUnder - i <= ghostUnder && nowUnder - i >= 0 && myBlock.square [4 - i, j] == 1) {
 					// 色を変える
 					Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
 					renderer.material = new Material (renderer.material);
@@ -438,6 +450,12 @@ public class Game : MonoBehaviour {
 				downTime=0.3f;
 			else if(timer > 240.0f)
 				downTime=0.2f;
+
+
+			if (Input.GetKeyDown (KeyCode.D) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
+			{
+
+			}
 
 			// 右回転をXキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
