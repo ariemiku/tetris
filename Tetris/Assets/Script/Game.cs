@@ -534,6 +534,8 @@ public class Game : MonoBehaviour {
 				}
 
 				Ghost();
+				MapCreate();
+				ChangeMyBlockColor();
 			}
 
 			// 左回転をZキーで行う
@@ -635,6 +637,8 @@ public class Game : MonoBehaviour {
 				}
 
 				Ghost();
+				MapCreate();
+				ChangeMyBlockColor();
 			}
 
 			// ブロックの位置を右に移動させる
