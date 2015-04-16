@@ -65,15 +65,15 @@ public class Game : MonoBehaviour {
 		switch(nowBlock)
 		{
 		case 0:
-			myBlock.square = new int [,]{{0,1,0,0,0},
-										 {0,1,0,0,0},
-										 {0,1,0,0,0},
-										 {0,1,0,0,0},
+			myBlock.square = new int [,]{{0,0,1,0,0},
+										 {0,0,1,0,0},
+										 {0,0,1,0,0},
+										 {0,0,1,0,0},
 										 {0,0,0,0,0}};
 			myBlock.topBlock = -4;
 			myBlock.underBlock = -1;
-			myBlock.leftBlock = 3;
-			myBlock.rightBlock = 3;
+			myBlock.leftBlock = 4;
+			myBlock.rightBlock = 4;
 
 			leftSpace=0;
 			rightSpace=0;
@@ -146,14 +146,14 @@ public class Game : MonoBehaviour {
 			
 		case 5:
 			myBlock.square = new int [,]{{0,0,0,0,0},
-										 {0,1,0,0,0},
-										 {0,1,0,0,0},
-										 {0,1,1,0,0},
+										 {0,0,1,0,0},
+										 {0,0,1,0,0},
+										 {0,0,1,1,0},
 										 {0,0,0,0,0}};
 			myBlock.topBlock = -3;
 			myBlock.underBlock = -1;
-			myBlock.leftBlock = 3;
-			myBlock.rightBlock = 4;
+			myBlock.leftBlock = 4;
+			myBlock.rightBlock = 5;
 
 			leftSpace=0;
 			rightSpace=0;
@@ -283,12 +283,27 @@ public class Game : MonoBehaviour {
 			}
 		}
 
+		int underSpace = 0;
+		for(int i=3;i>=0;i--)
+		{
+			for(int j=0;j<5;j++)
+			{
+				if(myBlock.square[i,j]==1)
+				{
+					underSpace=3-i;
+					goto EXITLOOP;
+				}
+			}
+		}
+
+		EXITLOOP:;
+
 		for(int i=0;i<5;i++)
 		{
 			for(int j=1;j<5;j++)
 			{
-				if(ghostUnder-(3-i)>=0 && myBlock.leftBlock-1+j<=9 && myBlock.square[i,j]==1 && map[ghostUnder-(3-i),myBlock.leftBlock-1+j]!=1)
-					map[ghostUnder-(3-i),myBlock.leftBlock-1+j]=2;
+			if(ghostUnder-(3-underSpace-i)>=0 && moveX+j<=9 && myBlock.square[i,j]==1 && map[ghostUnder-(3-underSpace-i),moveX+j]!=1)
+				map[ghostUnder-(3-underSpace-i),moveX+j]=2;
 			}
 		}
 	}
@@ -451,104 +466,128 @@ public class Game : MonoBehaviour {
 			else if(timer > 240.0f)
 				downTime=0.2f;
 
-
-			if (Input.GetKeyDown (KeyCode.D) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
-			{
-
-			}
-
 			// 右回転をXキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
 			if (Input.GetKeyDown (KeyCode.X) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
 			{
-
-				int[,] blockCopy = new int[5,5];
 				int right = 0;
 				int left = 4;
 				int top = 4;
 				int under = 0;
 
-				for(int i=0;i<5;i++)
+				if(nowBlock==0)
 				{
-					for(int j=0;j<5;j++)
-					{
-						blockCopy[i,j] = myBlock.square[4-j,i];
-						if(blockCopy[i,j]==1)
-						{
-							if(under<i)
-								under=i;
-							if(top>i)
-								top=i;
-							if(left>j)
-								left=j;
-							if(right<j)
-								right=j;
+					int[,] blockCopy = new int[4,4];
 
+					for(int i=0;i<4;i++)
+					{
+						for(int j=0;j<4;j++)
+						{
+							blockCopy[i,j]=myBlock.square[3-j,1+i];
+							if(blockCopy[i,j]==1)
+							{
+								if(under<i)
+									under=i;
+								if(top>i)
+									top=i;
+								if(left>j)
+									left=j;
+								if(right<j)
+									right=j;
+							}
 						}
 					}
-				}
 
-				// コピーに作った回転させたデータを移す
-				if(left+moveX >=0 && right+moveX <=9)
-				{
-					for(int i=0;i<5;i++)
+					// コピーに作った回転させたデータを移す
+					if(left+moveX >=0 && right+moveX <=9)
 					{
-						for(int j=0;j<5;j++)
+						for(int i=0;i<4;i++)
 						{
-							myBlock.square[i,j]=0;
+							for(int j=0;j<4;j++)
+							{
+								myBlock.square[i,1+j]=blockCopy[i,j];
+							}
 						}
-					}
-					for(int i=0;i<under;i++)
-					{
-						for(int j=0;j<5;j++)
-						{
-							myBlock.square[3-i,j]=blockCopy[under-i,j];
-							blockCopy[under-i,j] = 0;
-						}
-					}
-					myBlock.leftBlock=left+moveX;
-					myBlock.rightBlock=right+moveX;
-					myBlock.topBlock=myBlock.underBlock-(under-top);
-				}
+						myBlock.leftBlock=(1+left)+moveX;
+						myBlock.rightBlock=(1+right)+moveX;
 
-				// 回転させたブロックの情報の更新
-				for(int i=0;i<2;i++)
-				{
-					for(int j=4;j>=0;j--)
-					{
-						if(myBlock.square[j,i]==1 && j==3)
-						{
-							leftSpace=0;
-							break;
-						}
-						else if(myBlock.square[j,i]==1)
-						{
-							leftSpace=3-j;
-							break;
-						}
+						myBlock.underBlock=(nowUnder-1)-(3-under);
+						myBlock.topBlock=myBlock.underBlock-(under-top);
 					}
+
 				}
-				rightSpace=0;
-				bool rightSpaceFlag=false;
-				for(int i=4;i>1;i--)
+				else if(nowBlock>1)
 				{
-					for(int j=4;j>=0;j--)
+					int[,] blockCopy = new int[3,3];
+
+					for(int i=0;i<3;i++)
 					{
-						if(myBlock.square[j,i]==1 && j==3)
+						for(int j=0;j<3;j++)
 						{
-							rightSpace=0;
-							rightSpaceFlag=true;
-							break;
-						}
-						else if(myBlock.square[j,i]==1)
-						{
-							rightSpace=3-j;
-							rightSpaceFlag=true;
-							break;
+							blockCopy[i,j]=myBlock.square[3-j,1+i];
+				
+							if(blockCopy[i,j]==1)
+							{
+								if(under<i)
+									under=i;
+								if(top>i)
+									top=i;
+								if(left>j)
+									left=j;
+								if(right<j)
+									right=j;
+							}
 						}
 					}
-					if(rightSpaceFlag==true)
-						break;
+
+					// コピーに作った回転させたデータを移す
+					if(left+moveX >=0 && right+moveX <=9)
+					{
+						for(int i=0;i<3;i++)
+						{
+							for(int j=0;j<3;j++)
+							{
+								myBlock.square[1+i,1+j]=blockCopy[i,j];
+							}
+						}
+						myBlock.leftBlock=(1+left)+moveX;
+						myBlock.rightBlock=(1+right)+moveX;
+						myBlock.underBlock=(nowUnder-1)-(2-under);
+						myBlock.topBlock=myBlock.underBlock-(under-top);
+					}
+
+					// 回転させたブロックの情報の更新
+					if(myBlock.square[1+under,1+left]==1)
+					{
+						leftSpace=0;
+					}
+					else
+					{
+						for(int i=1+under;i>=0;i--)
+						{
+							if(myBlock.square[i,1+left]==1)
+							{
+								leftSpace=(1+under)-i;
+								break;
+							}
+						}
+					}
+
+					if(myBlock.square[1+under,1+right]==1)
+					{
+						rightSpace=0;
+					}
+					else
+					{
+						for(int i=1+under;i>=0;i--)
+						{
+							if(myBlock.square[i,1+right]==1)
+							{
+								rightSpace=(1+under)-i;
+								break;
+							}
+						}
+					}
 				}
 
 				Ghost();
@@ -560,100 +599,123 @@ public class Game : MonoBehaviour {
 			// ブロックがO型以外の場合に回転処理をするようにする
 			if (Input.GetKeyDown (KeyCode.Z) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
 			{
-				
-				int[,] blockCopy = new int[5,5];
 				int right = 0;
 				int left = 4;
 				int top = 4;
 				int under = 0;
 				
-				for(int i=0;i<5;i++)
+				if(nowBlock==0)
 				{
-					for(int j=0;j<5;j++)
+					int[,] blockCopy = new int[4,4];
+					
+					for(int i=0;i<4;i++)
 					{
-						blockCopy[i,j] = myBlock.square[j,4-i];
-						if(blockCopy[i,j]==1)
+						for(int j=0;j<4;j++)
 						{
-							if(under<i)
-								under=i;
-							if(top>i)
-								top=i;
-							if(left>j)
-								left=j;
-							if(right<j)
-								right=j;
-							
-						}
-					}
-				}
-
-				// コピーに作った回転させたデータを移す
-				if(left+moveX >=0 && right+moveX <=9)
-				{
-					// データをクリアにする
-					for(int i=0;i<5;i++)
-					{
-						for(int j=0;j<5;j++)
-						{
-							myBlock.square[i,j]=0;
-						}
-					}
-
-					for(int i=0;i<=under;i++)
-					{
-						for(int j=0;j<=right;j++)
-						{
-							if(1+j<5&&left+j<5)
+							blockCopy[i,j]=myBlock.square[j,4-i];
+							if(blockCopy[i,j]==1)
 							{
-								myBlock.square[3-i,1+j]=blockCopy[under-i,left+j];
+								if(under<i)
+									under=i;
+								if(top>i)
+									top=i;
+								if(left>j)
+									left=j;
+								if(right<j)
+									right=j;
 							}
 						}
 					}
-					myBlock.leftBlock=1+moveX;
-					myBlock.rightBlock=(right-left)+1+moveX;
-					myBlock.topBlock=myBlock.underBlock-(under-top);
-				}
-
-				// 回転させたブロックの情報の更新
-				for(int i=0;i<2;i++)
-				{
-					for(int j=4;j>=0;j--)
+					
+					// コピーに作った回転させたデータを移す
+					if(left+moveX >=0 && right+moveX <=9)
 					{
-						if(myBlock.square[j,i]==1 && j==3)
+						for(int i=0;i<4;i++)
 						{
-							leftSpace=0;
-							break;
+							for(int j=0;j<4;j++)
+							{
+								myBlock.square[i,1+j]=blockCopy[i,j];
+							}
 						}
-						else if(myBlock.square[j,i]==1)
+						myBlock.leftBlock=(1+left)+moveX;
+						myBlock.rightBlock=(1+right)+moveX;
+						
+						myBlock.underBlock=(nowUnder-1)-(3-under);
+						myBlock.topBlock=myBlock.underBlock-(under-top);
+					}
+				}
+				else if(nowBlock>1)
+				{
+					int[,] blockCopy = new int[3,3];
+					
+					for(int i=0;i<3;i++)
+					{
+						for(int j=0;j<3;j++)
 						{
-							leftSpace=3-j;
-							break;
+							blockCopy[i,j]=myBlock.square[1+j,3-i];
+							
+							if(blockCopy[i,j]==1)
+							{
+								if(under<i)
+									under=i;
+								if(top>i)
+									top=i;
+								if(left>j)
+									left=j;
+								if(right<j)
+									right=j;
+							}
+						}
+					}
+					// コピーに作った回転させたデータを移す
+					if(left+moveX >=0 && right+moveX <=9)
+					{
+						for(int i=0;i<3;i++)
+						{
+							for(int j=0;j<3;j++)
+							{
+								myBlock.square[1+i,1+j]=blockCopy[i,j];
+							}
+						}
+						myBlock.leftBlock=(1+left)+moveX;
+						myBlock.rightBlock=(1+right)+moveX;
+						myBlock.underBlock=(nowUnder-1)-(2-under);
+						myBlock.topBlock=myBlock.underBlock-(under-top);
+					}
+					
+					// 回転させたブロックの情報の更新
+					if(myBlock.square[1+under,1+left]==1)
+					{
+						leftSpace=0;
+					}
+					else
+					{
+						for(int i=1+under;i>=0;i--)
+						{
+							if(myBlock.square[i,1+left]==1)
+							{
+								leftSpace=(1+under)-i;
+								break;
+							}
+						}
+					}
+					
+					if(myBlock.square[1+under,1+right]==1)
+					{
+						rightSpace=0;
+					}
+					else
+					{
+						for(int i=1+under;i>=0;i--)
+						{
+							if(myBlock.square[i,1+right]==1)
+							{
+								rightSpace=(1+under)-i;
+								break;
+							}
 						}
 					}
 				}
-				rightSpace=0;
-				bool rightSpaceFlag=false;
-				for(int i=4;i>1;i--)
-				{
-					for(int j=4;j>=0;j--)
-					{
-						if(myBlock.square[j,i]==1 && j==3)
-						{
-							rightSpace=0;
-							rightSpaceFlag=true;
-							break;
-						}
-						else if(myBlock.square[j,i]==1)
-						{
-							rightSpace=3-j;
-							rightSpaceFlag=true;
-							break;
-						}
-					}
-					if(rightSpaceFlag==true)
-						break;
-				}
-
 				Ghost();
 				MapCreate();
 				ChangeMyBlockColor();
