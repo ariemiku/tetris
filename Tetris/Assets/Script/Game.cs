@@ -302,7 +302,8 @@ public class Game : MonoBehaviour {
 		{
 			for(int j=1;j<5;j++)
 			{
-			if(ghostUnder-(3-underSpace-i)>=0 && moveX+j<=9 && myBlock.square[i,j]==1 && map[ghostUnder-(3-underSpace-i),moveX+j]!=1)
+			if(ghostUnder-(3-underSpace-i)>=0 && moveX+j<=9 &&
+				   myBlock.square[i,j]==1 && map[ghostUnder-(3-underSpace-i),moveX+j]!=1)
 				map[ghostUnder-(3-underSpace-i),moveX+j]=2;
 			}
 		}
@@ -468,7 +469,9 @@ public class Game : MonoBehaviour {
 
 			// 右回転をXキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
-			if (Input.GetKeyDown (KeyCode.X) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
+			if (Input.GetKeyDown (KeyCode.X) && 
+			    (myBlock.leftBlock + (myBlock.underBlock-myBlock.topBlock)) <=9 &&
+			    nowBlock != 1 && ghostUnder > myBlock.underBlock) 
 			{
 				int right = 0;
 				int left = 4;
@@ -498,6 +501,17 @@ public class Game : MonoBehaviour {
 						}
 					}
 
+					for(int i=0;i<4;i++)
+					{
+						for(int j=0;j<4;j++)
+						{
+							if(moveX+1 >= 0 && (myBlock.underBlock-3)+i >= 0 &&
+							   blockCopy[i,j] == 1 && map[(myBlock.underBlock-3)+i,moveX+1] == 1)
+							{
+								goto EXITLOOP;
+							}
+						}
+					}
 					// コピーに作った回転させたデータを移す
 					if(left+moveX >=0 && right+moveX <=9)
 					{
@@ -514,6 +528,7 @@ public class Game : MonoBehaviour {
 						myBlock.underBlock=(nowUnder-1)-(3-under);
 						myBlock.topBlock=myBlock.underBlock-(under-top);
 					}
+				EXITLOOP:;
 
 				}
 				else if(nowBlock>1)
@@ -540,6 +555,17 @@ public class Game : MonoBehaviour {
 						}
 					}
 
+					for(int i=0;i<3;i++)
+					{
+						for(int j=0;j<3;j++)
+						{
+							if(moveX+1 >= 0 && (myBlock.underBlock-2)+i>=0 &&
+							   blockCopy[i,j] == 1 && map[(myBlock.underBlock-2)+i,moveX+1] == 1)
+							{
+								goto EXITLOOP;
+							}
+						}
+					}
 					// コピーに作った回転させたデータを移す
 					if(left+moveX >=0 && right+moveX <=9)
 					{
@@ -588,6 +614,7 @@ public class Game : MonoBehaviour {
 							}
 						}
 					}
+				EXITLOOP:;
 				}
 
 				Ghost();
@@ -597,7 +624,9 @@ public class Game : MonoBehaviour {
 
 			// 左回転をZキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
-			if (Input.GetKeyDown (KeyCode.Z) && nowBlock != 1 && ghostUnder > myBlock.underBlock) 
+			if (Input.GetKeyDown (KeyCode.Z) && 
+			    (myBlock.leftBlock + (myBlock.underBlock-myBlock.topBlock)) <=9 &&
+			    nowBlock != 1 && ghostUnder > myBlock.underBlock) 
 			{
 				int right = 0;
 				int left = 4;
@@ -626,7 +655,18 @@ public class Game : MonoBehaviour {
 							}
 						}
 					}
-					
+
+					for(int i=0;i<4;i++)
+					{
+						for(int j=0;j<4;j++)
+						{
+							if(moveX+1 >= 0 && (myBlock.underBlock-3)+i >= 0 &&
+							   blockCopy[i,j] == 1 && map[(myBlock.underBlock-3)+i,moveX+1] == 1)
+							{
+								goto EXITLOOP;
+							}
+						}
+					}
 					// コピーに作った回転させたデータを移す
 					if(left+moveX >=0 && right+moveX <=9)
 					{
@@ -643,6 +683,7 @@ public class Game : MonoBehaviour {
 						myBlock.underBlock=(nowUnder-1)-(3-under);
 						myBlock.topBlock=myBlock.underBlock-(under-top);
 					}
+				EXITLOOP:;
 				}
 				else if(nowBlock>1)
 				{
@@ -664,6 +705,17 @@ public class Game : MonoBehaviour {
 									left=j;
 								if(right<j)
 									right=j;
+							}
+						}
+					}
+					for(int i=0;i<3;i++)
+					{
+						for(int j=0;j<3;j++)
+						{
+							if(moveX+1 >= 0 && (myBlock.underBlock-2)+i>=0 &&
+							   blockCopy[i,j] == 1 && map[(myBlock.underBlock-2)+i,moveX+1] == 1)
+							{
+								goto EXITLOOP;
 							}
 						}
 					}
@@ -715,6 +767,7 @@ public class Game : MonoBehaviour {
 							}
 						}
 					}
+				EXITLOOP:;
 				}
 				Ghost();
 				MapCreate();
@@ -722,52 +775,84 @@ public class Game : MonoBehaviour {
 			}
 
 			// ブロックの位置を右に移動させる
-			if (Input.GetKeyDown (KeyCode.RightArrow) && myBlock.topBlock >= 0) {
-				// 右にブロックがあるかどうか調べる
-				if (myBlock.rightBlock < 9 && myBlock.underBlock < 20) {
-					for (int i=0; myBlock.underBlock-i>myBlock.topBlock; i++) {
-						if (map [myBlock.underBlock - i, myBlock.rightBlock + 1] == 1) {
-							rightFlag = true;
-							break;
+			if (Input.GetKeyDown (KeyCode.RightArrow) && myBlock.topBlock >= 0 && myBlock.rightBlock<9) 
+			{
+				rightFlag = false;
+				int underSpace = 0;
+				for(int i=3;i>=0;i--)
+				{
+					for(int j=0;j<5;j++)
+					{
+						if(myBlock.square[i,j]==1)
+						{
+							underSpace=3-i;
+							goto EXITLOOP;
 						}
 					}
 				}
+				EXITLOOP:;
 
-				if (myBlock.rightBlock < 9 && rightFlag == false) {
+				for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
+				{
+					if(myBlock.square[(3-underSpace)-i,myBlock.rightBlock-moveX] == 1 &&
+					 map[myBlock.underBlock-i,myBlock.rightBlock+1] == 1)
+					{
+						rightFlag=true;
+						break;
+					}
+				}
+
+				if(rightFlag==false)
+				{
 					moveX += 1;
 					myBlock.leftBlock += 1;
 					myBlock.rightBlock += 1;
-					if (leftFlag == true)
-						leftFlag = false;
 				}
+
 				Ghost();
 				MapCreate();
 				ChangeMyBlockColor();
-
 			}
 			// ブロックの位置を左に移動させる
-			if (Input.GetKeyDown (KeyCode.LeftArrow) && myBlock.topBlock >= 0) {
-				// 左にブロックがあるかどうか調べる
-				if (myBlock.leftBlock > 0 && myBlock.underBlock < 20) {
-					for (int i=0; myBlock.underBlock-i>myBlock.topBlock; i++) {
-						if (map [myBlock.underBlock - i, myBlock.leftBlock - 1] == 1) {
-							leftFlag = true;
-							break;
+			if (Input.GetKeyDown (KeyCode.LeftArrow) && myBlock.topBlock >= 0 && myBlock.leftBlock>0) 
+			{
+				leftFlag=false;
+				int underSpace = 0;
+				for(int i=3;i>=0;i--)
+				{
+					for(int j=0;j<5;j++)
+					{
+						if(myBlock.square[i,j]==1)
+						{
+							underSpace=3-i;
+							goto EXITLOOP;
 						}
 					}
 				}
+				EXITLOOP:;
 
-				if (myBlock.leftBlock > 0 && leftFlag == false) {
+				for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
+				{
+					if(myBlock.square[(3-underSpace)-i,myBlock.leftBlock-moveX] == 1 &&
+					 map[myBlock.underBlock-i,myBlock.leftBlock-1] == 1)
+					{
+						leftFlag=true;
+						break;
+					}
+				}
+
+				if(leftFlag==false)
+				{
 					moveX -= 1;
 					myBlock.leftBlock -= 1;
 					myBlock.rightBlock -= 1;
-					if (rightFlag == true)
-						rightFlag = false;
 				}
+
 				Ghost();
 				MapCreate();
 				ChangeMyBlockColor();
 			}
+
 			// 下キーで落下させ続ける処理
 			if(Input.GetKey(KeyCode.DownArrow) && myBlock.underBlock >=0)
 			{
