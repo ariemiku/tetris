@@ -38,6 +38,7 @@ public class Game : MonoBehaviour {
 	bool gameoverFlag;
 
 	public Material nowColor;
+	public Material nextColor;
 	public Material backColor;
 	public Material gost;
 	public Material red;
@@ -69,12 +70,14 @@ public class Game : MonoBehaviour {
 	public int moveX = 0;
 
 	private GameObject[,] m_aObject = new GameObject[20,10];
+	private GameObject[,] m_nextTetrimino = new GameObject[5, 5];
 
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
 		nowBlock = next;
 		next = Random.Range(0,7);
+		Debug.Log ("NEXT:"+next);
 
 		switch(nowBlock)
 		{
@@ -207,6 +210,8 @@ public class Game : MonoBehaviour {
 		default:
 			break;
 		}
+
+		SetNext ();
 	}
 
 	// ネクストの設定
@@ -219,13 +224,8 @@ public class Game : MonoBehaviour {
 				{0,0,1,0,0},
 				{0,0,1,0,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -4;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 4;
-			nextBlock.rightBlock = 4;
 			
-			leftSpace=0;
-			rightSpace=0;
+			nextColor = lightBlue;
 			
 			break;
 			
@@ -235,13 +235,8 @@ public class Game : MonoBehaviour {
 				{0,1,1,0,0},
 				{0,1,1,0,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -2;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 3;
-			nextBlock.rightBlock = 4;
 			
-			leftSpace=0;
-			rightSpace=0;
+			nextColor = yello;
 			
 			break;
 			
@@ -251,13 +246,8 @@ public class Game : MonoBehaviour {
 				{0,0,1,1,0},
 				{0,1,1,0,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -2;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 3;
-			nextBlock.rightBlock = 5;
 			
-			leftSpace=0;
-			rightSpace=1;
+			nextColor = yelloGreen;
 			
 			break;
 			
@@ -267,13 +257,8 @@ public class Game : MonoBehaviour {
 				{0,1,1,0,0},
 				{0,0,1,1,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -2;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 3;
-			nextBlock.rightBlock = 5;
 			
-			leftSpace=1;
-			rightSpace=0;
+			nextColor = red;
 			
 			break;
 			
@@ -283,13 +268,8 @@ public class Game : MonoBehaviour {
 				{0,0,1,0,0},
 				{0,1,1,0,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -3;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 3;
-			nextBlock.rightBlock = 4;
 			
-			leftSpace=0;
-			rightSpace=0;
+			nextColor = blue;
 			
 			break;
 			
@@ -299,13 +279,8 @@ public class Game : MonoBehaviour {
 				{0,0,1,0,0},
 				{0,0,1,1,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -3;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 4;
-			nextBlock.rightBlock = 5;
 			
-			leftSpace=0;
-			rightSpace=0;
+			nextColor = orange;
 			
 			break;
 			
@@ -315,18 +290,26 @@ public class Game : MonoBehaviour {
 				{0,1,1,1,0},
 				{0,0,1,0,0},
 				{0,0,0,0,0}};
-			nextBlock.topBlock = -2;
-			nextBlock.underBlock = -1;
-			nextBlock.leftBlock = 3;
-			nextBlock.rightBlock = 5;
 			
-			leftSpace=1;
-			rightSpace=1;
+			nextColor = purple;
 			
 			break;
 			
 		default:
 			break;
+		}
+
+		for (int y = 0; y < 5; y++) {
+			for(int x = 0; x < 5; x++) {
+				m_nextTetrimino[y, x].transform.position = new Vector3(5.75f + x, 2 - y, 0);
+				Renderer renderer = m_nextTetrimino[y, x].GetComponent<Renderer> ();
+				if(nextBlock.square[y, x] == 1) {
+					renderer.material = new Material (nextColor);
+				}
+				else if(nextBlock.square[y, x] == 0) {
+					renderer.material = new Material (backColor);
+				}
+			}
 		}
 	}
 
@@ -542,31 +525,6 @@ public class Game : MonoBehaviour {
 		moveX = 2;
 
 		// キューブを生成し、位置と色を設定して表示する
-		switch (nowBlock) {
-		case 0:
-			nowColor = lightBlue;
-			break;
-		case 1:
-			nowColor = yello;
-			break;
-		case 2:
-			nowColor = yelloGreen;
-			break;
-		case 3:
-			nowColor = red;
-			break;
-		case 4:
-			nowColor = blue;
-			break;
-		case 5:
-			nowColor = orange;
-			break;
-		case 6:
-			nowColor = purple;
-			break;
-		default :
-			break;
-		}
 		for (int i=0; i<20; i++) 
 		{
 			for(int j=0;j<10;j++)
@@ -574,7 +532,7 @@ public class Game : MonoBehaviour {
 				m_aObject[i,j] = GameObject.CreatePrimitive (PrimitiveType.Cube);
 				m_aObject[i,j].transform.Translate (-8+j,9-i,0);
 				Renderer renderer = m_aObject[i,j].GetComponent<Renderer> ();
-				renderer.material = new Material (nowColor);
+				renderer.material = new Material (backColor);
 			}
 		}
 
@@ -582,9 +540,16 @@ public class Game : MonoBehaviour {
 		leftFlag = false;
 		underFlag = false;
 
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
+				m_nextTetrimino [y, x] = GameObject.CreatePrimitive (PrimitiveType.Cube);
+			}
+		}
+
 		// 初期のブロックの設定
 		nowUnder = 0;
 		next = Random.Range(0,7);
+		Debug.Log ("NEXT:"+next);
 		SetBlockType ();
 		ghostLeft = 0;
 
