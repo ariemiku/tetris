@@ -27,6 +27,7 @@ public class Game : MonoBehaviour {
 	public Text gameoverText;
 
 	BLOCK myBlock = new BLOCK();
+	BLOCK nextBlock = new BLOCK();
 
 	// 20*10
 	int[,] map = new int[20,10];
@@ -35,6 +36,17 @@ public class Game : MonoBehaviour {
 	bool rightFlag;
 	bool leftFlag;
 	bool gameoverFlag;
+
+	public Material nowColor;
+	public Material backColor;
+	public Material gost;
+	public Material red;
+	public Material blue;
+	public Material lightBlue;
+	public Material yello;
+	public Material yelloGreen;
+	public Material purple;
+	public Material orange;
 
 	public float timer = 0.0f;
 	public float frontTime = 0.0f;
@@ -52,6 +64,7 @@ public class Game : MonoBehaviour {
 	public int rightSpace=0;
 	public int nowBlock;
 	public int nowUnder;
+	public int next;
 	
 	public int moveX = 0;
 
@@ -60,7 +73,8 @@ public class Game : MonoBehaviour {
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
-		nowBlock = Random.Range(0,7);
+		nowBlock = next;
+		next = Random.Range(0,7);
 
 		switch(nowBlock)
 		{
@@ -78,6 +92,8 @@ public class Game : MonoBehaviour {
 			leftSpace=0;
 			rightSpace=0;
 
+			nowColor = lightBlue;
+
 			break;
 			
 		case 1:
@@ -93,6 +109,8 @@ public class Game : MonoBehaviour {
 
 			leftSpace=0;
 			rightSpace=0;
+
+			nowColor = yello;
 
 			break;
 			
@@ -110,6 +128,8 @@ public class Game : MonoBehaviour {
 			leftSpace=0;
 			rightSpace=1;
 
+			nowColor = yelloGreen;
+
 			break;
 			
 		case 3:
@@ -125,6 +145,8 @@ public class Game : MonoBehaviour {
 
 			leftSpace=1;
 			rightSpace=0;
+
+			nowColor = red;
 
 			break;
 			
@@ -142,6 +164,8 @@ public class Game : MonoBehaviour {
 			leftSpace=0;
 			rightSpace=0;
 
+			nowColor = blue;
+
 			break;
 			
 		case 5:
@@ -157,6 +181,8 @@ public class Game : MonoBehaviour {
 
 			leftSpace=0;
 			rightSpace=0;
+
+			nowColor = orange;
 
 			break;
 			
@@ -174,6 +200,129 @@ public class Game : MonoBehaviour {
 			leftSpace=1;
 			rightSpace=1;
 
+			nowColor = purple;
+
+			break;
+			
+		default:
+			break;
+		}
+	}
+
+	// ネクストの設定
+	void SetNext () {
+		switch(next)
+		{
+		case 0:
+			nextBlock.square = new int [,]{{0,0,1,0,0},
+				{0,0,1,0,0},
+				{0,0,1,0,0},
+				{0,0,1,0,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -4;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 4;
+			nextBlock.rightBlock = 4;
+			
+			leftSpace=0;
+			rightSpace=0;
+			
+			break;
+			
+		case 1:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,0,0,0},						
+				{0,1,1,0,0},
+				{0,1,1,0,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -2;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 3;
+			nextBlock.rightBlock = 4;
+			
+			leftSpace=0;
+			rightSpace=0;
+			
+			break;
+			
+		case 2:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,0,0,0},
+				{0,0,1,1,0},
+				{0,1,1,0,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -2;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 3;
+			nextBlock.rightBlock = 5;
+			
+			leftSpace=0;
+			rightSpace=1;
+			
+			break;
+			
+		case 3:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,0,0,0},
+				{0,1,1,0,0},
+				{0,0,1,1,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -2;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 3;
+			nextBlock.rightBlock = 5;
+			
+			leftSpace=1;
+			rightSpace=0;
+			
+			break;
+			
+		case 4:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,1,0,0},	
+				{0,0,1,0,0},
+				{0,1,1,0,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -3;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 3;
+			nextBlock.rightBlock = 4;
+			
+			leftSpace=0;
+			rightSpace=0;
+			
+			break;
+			
+		case 5:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,1,0,0},
+				{0,0,1,0,0},
+				{0,0,1,1,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -3;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 4;
+			nextBlock.rightBlock = 5;
+			
+			leftSpace=0;
+			rightSpace=0;
+			
+			break;
+			
+		case 6:
+			nextBlock.square = new int [,]{{0,0,0,0,0},
+				{0,0,0,0,0},
+				{0,1,1,1,0},
+				{0,0,1,0,0},
+				{0,0,0,0,0}};
+			nextBlock.topBlock = -2;
+			nextBlock.underBlock = -1;
+			nextBlock.leftBlock = 3;
+			nextBlock.rightBlock = 5;
+			
+			leftSpace=1;
+			rightSpace=1;
+			
 			break;
 			
 		default:
@@ -320,21 +469,12 @@ public class Game : MonoBehaviour {
 				if (map [i, j] == 0) {
 					// 色を変える
 					Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
-					renderer.material = new Material (renderer.material);
-					renderer.material.color = new Color (0.0f, 0.0f, 1.0f);
+					renderer.material = new Material (backColor);
 				}
-				else if (map [i, j] == 1) {
-					// 色を変える
-					Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
-					renderer.material = new Material (renderer.material);
-					renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
-				}
-				
 				else if (map [i, j] == 2) {
 					// 色を変える
 					Renderer renderer = m_aObject [i, j].GetComponent<Renderer> ();
-					renderer.material = new Material (renderer.material);
-					renderer.material.color = new Color (0.8f, 0.8f, 0.8f);
+					renderer.material = new Material (gost);
 				}
 			}
 		}
@@ -348,8 +488,7 @@ public class Game : MonoBehaviour {
 				if (nowUnder - i <= ghostUnder && nowUnder - i >= 0 && myBlock.square [4 - i, j] == 1) {
 					// 色を変える
 					Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
-					renderer.material = new Material (renderer.material);
-					renderer.material.color = new Color (1.0f, 0.0f, 1.0f);
+					renderer.material = new Material (nowColor);
 					
 				}
 			}
@@ -403,6 +542,31 @@ public class Game : MonoBehaviour {
 		moveX = 2;
 
 		// キューブを生成し、位置と色を設定して表示する
+		switch (nowBlock) {
+		case 0:
+			nowColor = lightBlue;
+			break;
+		case 1:
+			nowColor = yello;
+			break;
+		case 2:
+			nowColor = yelloGreen;
+			break;
+		case 3:
+			nowColor = red;
+			break;
+		case 4:
+			nowColor = blue;
+			break;
+		case 5:
+			nowColor = orange;
+			break;
+		case 6:
+			nowColor = purple;
+			break;
+		default :
+			break;
+		}
 		for (int i=0; i<20; i++) 
 		{
 			for(int j=0;j<10;j++)
@@ -410,8 +574,7 @@ public class Game : MonoBehaviour {
 				m_aObject[i,j] = GameObject.CreatePrimitive (PrimitiveType.Cube);
 				m_aObject[i,j].transform.Translate (-8+j,9-i,0);
 				Renderer renderer = m_aObject[i,j].GetComponent<Renderer> ();
-				renderer.material = new Material (renderer.material);
-				renderer.material.color = new Color (0.0f,0.0f,1.0f);
+				renderer.material = new Material (nowColor);
 			}
 		}
 
@@ -421,6 +584,7 @@ public class Game : MonoBehaviour {
 
 		// 初期のブロックの設定
 		nowUnder = 0;
+		next = Random.Range(0,7);
 		SetBlockType ();
 		ghostLeft = 0;
 
@@ -469,9 +633,9 @@ public class Game : MonoBehaviour {
 
 			// 右回転をXキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
-			if (Input.GetKeyDown (KeyCode.X) && 
+			if (Input.GetKeyDown (KeyCode.X)/* && 
 			    (myBlock.leftBlock + (myBlock.underBlock-myBlock.topBlock)) <=9 &&
-			    nowBlock != 1 && ghostUnder > myBlock.underBlock) 
+			    nowBlock != 1 && ghostUnder > myBlock.underBlock*/) 
 			{
 				int right = 0;
 				int left = 4;
@@ -624,9 +788,9 @@ public class Game : MonoBehaviour {
 
 			// 左回転をZキーで行う
 			// ブロックがO型以外の場合に回転処理をするようにする
-			if (Input.GetKeyDown (KeyCode.Z) && 
+			if (Input.GetKeyDown (KeyCode.Z)/* && 
 			    (myBlock.leftBlock + (myBlock.underBlock-myBlock.topBlock)) <=9 &&
-			    nowBlock != 1 && ghostUnder > myBlock.underBlock) 
+			    nowBlock != 1 && ghostUnder > myBlock.underBlock*/) 
 			{
 				int right = 0;
 				int left = 4;
@@ -885,8 +1049,7 @@ public class Game : MonoBehaviour {
 								{
 									// 色を変える
 									Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
-									renderer.material = new Material (renderer.material);
-									renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
+									renderer.material = new Material (nowColor);
 								}
 							}
 						}
@@ -905,8 +1068,7 @@ public class Game : MonoBehaviour {
 								{
 									// 色を変える
 									Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
-									renderer.material = new Material (renderer.material);
-									renderer.material.color = new Color (1.0f, 0.0f, 1.0f);
+									renderer.material = new Material (nowColor);
 								}
 							}
 						}
@@ -1031,8 +1193,7 @@ public class Game : MonoBehaviour {
 								{
 									// 色を変える
 									Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
-									renderer.material = new Material (renderer.material);
-									renderer.material.color = new Color (0.0f, 1.0f, 1.0f);
+									renderer.material = new Material (nowColor);
 								}
 							}
 						}
@@ -1051,8 +1212,7 @@ public class Game : MonoBehaviour {
 								{
 									// 色を変える
 									Renderer renderer = m_aObject [nowUnder - i, j + moveX].GetComponent<Renderer> ();
-									renderer.material = new Material (renderer.material);
-									renderer.material.color = new Color (1.0f, 0.0f, 1.0f);
+									renderer.material = new Material (nowColor);
 								}
 							}
 						}
