@@ -72,6 +72,10 @@ public class Game : MonoBehaviour {
 	private GameObject[,] m_aObject = new GameObject[20,10];
 	private GameObject[,] m_nextTetrimino = new GameObject[5, 5];
 
+	float downKeyStartTime = 0.0f;
+	bool downKeyStart;
+	float rigidTime = 0.1f;
+
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
@@ -510,7 +514,6 @@ public class Game : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
 		gameoverFlag = false;
 
 		// 配列の初期化
@@ -904,82 +907,103 @@ public class Game : MonoBehaviour {
 			}
 
 			// ブロックの位置を右に移動させる
-			if (Input.GetKeyDown (KeyCode.RightArrow) && myBlock.topBlock >= 0 && myBlock.rightBlock<9) 
+			if (Input.GetKey (KeyCode.RightArrow) && myBlock.topBlock >= 0 && myBlock.rightBlock<9) 
 			{
-				rightFlag = false;
-				int underSpace = 0;
-				for(int i=3;i>=0;i--)
-				{
-					for(int j=0;j<5;j++)
+				downKeyStartTime += Time.deltaTime;
+
+				if(downKeyStartTime >= rigidTime || !downKeyStart) {
+					rightFlag = false;
+					int underSpace = 0;
+					for(int i=3;i>=0;i--)
 					{
-						if(myBlock.square[i,j]==1)
+						for(int j=0;j<5;j++)
 						{
-							underSpace=3-i;
-							goto EXITLOOP;
+							if(myBlock.square[i,j]==1)
+							{
+								underSpace=3-i;
+								goto EXITLOOP;
+							}
 						}
 					}
-				}
-				EXITLOOP:;
-
-				for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
-				{
-					if(myBlock.square[(3-underSpace)-i,myBlock.rightBlock-moveX] == 1 &&
-					 map[myBlock.underBlock-i,myBlock.rightBlock+1] == 1)
+					EXITLOOP:;
+				
+					for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
 					{
-						rightFlag=true;
-						break;
+						if(myBlock.square[(3-underSpace)-i,myBlock.rightBlock-moveX] == 1 &&
+						 map[myBlock.underBlock-i,myBlock.rightBlock+1] == 1)
+						{
+							rightFlag=true;
+							break;
+						}
 					}
-				}
 
-				if(rightFlag==false)
-				{
-					moveX += 1;
-					myBlock.leftBlock += 1;
-					myBlock.rightBlock += 1;
-				}
+					if(rightFlag==false)
+					{
+						moveX += 1;
+						myBlock.leftBlock += 1;
+						myBlock.rightBlock += 1;
+					}
 
-				Ghost();
-				MapCreate();
-				ChangeMyBlockColor();
+					Ghost();
+					MapCreate();
+					ChangeMyBlockColor();
+
+					downKeyStartTime = 0.0f;
+					downKeyStart = true;
+				}
 			}
+
 			// ブロックの位置を左に移動させる
-			if (Input.GetKeyDown (KeyCode.LeftArrow) && myBlock.topBlock >= 0 && myBlock.leftBlock>0) 
+			if (Input.GetKey (KeyCode.LeftArrow) && myBlock.topBlock >= 0 && myBlock.leftBlock>0) 
 			{
-				leftFlag=false;
-				int underSpace = 0;
-				for(int i=3;i>=0;i--)
-				{
-					for(int j=0;j<5;j++)
+				downKeyStartTime += Time.deltaTime;
+
+				if(downKeyStartTime >= rigidTime || !downKeyStart) {
+					leftFlag=false;
+					int underSpace = 0;
+					for(int i=3;i>=0;i--)
 					{
-						if(myBlock.square[i,j]==1)
+						for(int j=0;j<5;j++)
 						{
-							underSpace=3-i;
-							goto EXITLOOP;
+							if(myBlock.square[i,j]==1)
+							{
+								underSpace=3-i;
+								goto EXITLOOP;
+							}
 						}
 					}
-				}
-				EXITLOOP:;
+					EXITLOOP:;
 
-				for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
-				{
-					if(myBlock.square[(3-underSpace)-i,myBlock.leftBlock-moveX] == 1 &&
-					 map[myBlock.underBlock-i,myBlock.leftBlock-1] == 1)
+					for(int i=0;myBlock.underBlock-i>=myBlock.topBlock;i++)
 					{
-						leftFlag=true;
-						break;
+						if(myBlock.square[(3-underSpace)-i,myBlock.leftBlock-moveX] == 1 &&
+						 map[myBlock.underBlock-i,myBlock.leftBlock-1] == 1)
+						{
+							leftFlag=true;
+							break;
+						}
 					}
-				}
 
-				if(leftFlag==false)
-				{
-					moveX -= 1;
-					myBlock.leftBlock -= 1;
-					myBlock.rightBlock -= 1;
-				}
+					if(leftFlag==false)
+					{
+						moveX -= 1;
+						myBlock.leftBlock -= 1;
+						myBlock.rightBlock -= 1;
+					}
 
-				Ghost();
-				MapCreate();
-				ChangeMyBlockColor();
+					Ghost();
+					MapCreate();
+					ChangeMyBlockColor();
+					
+					downKeyStartTime = 0.0f;
+					downKeyStart = true;
+				}
+			}
+
+			// 両方押されていない
+			if(!Input.GetKey (KeyCode.RightArrow) && !Input.GetKey (KeyCode.LeftArrow)) {
+				downKeyStartTime = 0.0f;
+				downKeyStart = false;
 			}
 
 			// 下キーで落下させ続ける処理
