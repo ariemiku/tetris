@@ -44,6 +44,7 @@ public class Game : MonoBehaviour {
 	BLOCKSTATE[,] map = new BLOCKSTATE[20,10];
 
 	bool gameoverFlag;
+	bool speedUp;
 
 	public Material nowColor;
 	public Material nextColor;
@@ -213,6 +214,7 @@ public class Game : MonoBehaviour {
 		}
 		myBlock.nowPosition = new Vector2 (3, -4);
 		blockCount++;
+		speedUp = false;
 
 		SetNext ();
 	}
@@ -338,7 +340,46 @@ public class Game : MonoBehaviour {
 	// ゴーストの当たり判定などを行う関数
 	void Ghost()
 	{
+		// 使用済みブロック、床に衝突するまでの長さを求める
+		int y;
+		for(y = 0; y < 20; y++) {
+			bool empty = true;
+			for(int i = 0; i < 4 && empty; i++) {
+				int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+				if(y + myBlock.blockPosition[i].y >= 20) {
+					empty = false;
+					break;
+				}
+				BLOCKSTATE state = map[y + (int)myBlock.blockPosition[i].y, x];
+				if(state == BLOCKSTATE.USED) {
+					empty = false;
+				}
+			}
+			if(!empty) {
+				break;
+			}
+		}
 
+		// ゴーストと落下中のブロックが重なった時、ブロックを表示するため
+		for (int i = 0; i < 4; i++) {
+			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+			if(map[y + (int)myBlock.blockPosition[i].y - 1, x] == BLOCKSTATE.USING) {
+				return;
+			}
+		}
+
+		// ゴースト更新
+		for(int j = 0; j < 20; j++) {
+			for(int i = 0; i < 10; i++) {
+				if(map[j, i] == BLOCKSTATE.GHOST) {
+					map[j, i] = BLOCKSTATE.EMPTY;
+				}
+			}
+		}
+		for(int i = 0; i < 4; i++) {
+			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+			map[y + (int)myBlock.blockPosition[i].y - 1, x] = BLOCKSTATE.GHOST;
+		}
 	}
 
 	// マップを更新する関数
@@ -456,6 +497,17 @@ public class Game : MonoBehaviour {
 			break;
 		}
 
+		for(int i = 0; i < 4; i++) {
+			int y = (int)(myBlock.blockPosition[i].y + myBlock.nowPosition.y);
+			if(y < 0) {
+				moveX = 0;
+				break;
+			}
+			if(i == 3) {
+				speedUp = true;
+			}
+		}
+
 		// 移動できるか
 		for (int i = 0; i < 4; i++) {
 			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x + moveX);
@@ -497,8 +549,8 @@ public class Game : MonoBehaviour {
 	// ブロックの回転
 	void RotateBlockLeft () {
 		if (nowBlock != O_TETRIMINO) {
+			// 回転後のブロックを作成
 			int[,] afterBlock = new int[5, 5];
-			
 			int index = 0;
 			Vector2[] position = new Vector2[4];
 			for (int y = 0; y < 5; y++) {
@@ -510,11 +562,12 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
-			
+
+			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
 				int y = (int)(position[i].y + myBlock.nowPosition.y);
-				if(y >= 20) {
+				if(y < 0 || y >= 20) {
 					return;
 				}
 				if(x >= 0 && x < 10) {
@@ -530,6 +583,8 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
+
+			// 壁にぶつかった時に横にずれて回転する
 			int leftMove = 0;
 			int rightMove = 9;
 			for(int i = 0; i < 4; i++) {
@@ -541,23 +596,25 @@ public class Game : MonoBehaviour {
 					rightMove = x;
 				}
 			}
-
 			if(leftMove != 0) {
 				int x = (int)(myBlock.nowPosition.x - leftMove);
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
 			if(rightMove != 9) {
-				int x = (int)(myBlock.nowPosition.x - (rightMove - 19));
+				int x = (int)(myBlock.nowPosition.x - (rightMove - 9));
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
 
+			index = 0;
 			for(int y = 0; y < 5; y++) {
 				for(int x = 0; x < 5; x++) {
 					myBlock.square[y, x] = afterBlock[y, x];
 					if(myBlock.square[y, x] == 1) {
 						map[y + (int)myBlock.nowPosition.y, x + (int)myBlock.nowPosition.x] = BLOCKSTATE.USING;
+						myBlock.blockPosition[index] = new Vector2(x, y);
+						index++;
 					}
 				}
 			}
@@ -566,24 +623,25 @@ public class Game : MonoBehaviour {
 
 	void RotateBlockRight () {
 		if (nowBlock != O_TETRIMINO) {
+			// 回転後のブロックを作成
 			int[,] afterBlock = new int[5, 5];
-			
 			int index = 0;
 			Vector2[] position = new Vector2[4];
 			for (int y = 0; y < 5; y++) {
 				for (int x = 0; x < 5; x++) {
 					afterBlock [x, 4-y] = myBlock.square[y, x];
 					if(afterBlock[x, 4-y] == 1) {
-						position[index] = new Vector2(y, 4-x);
+						position[index] = new Vector2(4-y, x);
 						index++;
 					}
 				}
 			}
-			
+
+			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
 				int y = (int)(position[i].y + myBlock.nowPosition.y);
-				if(y >= 20) {
+				if(y < 0 || y >= 20) {
 					return;
 				}
 				if(x >= 0 && x < 10) {
@@ -599,6 +657,8 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
+
+			// 壁にぶつかった時に横にずれて回転する
 			int leftMove = 0;
 			int rightMove = 9;
 			for(int i = 0; i < 4; i++) {
@@ -610,23 +670,25 @@ public class Game : MonoBehaviour {
 					rightMove = x;
 				}
 			}
-			
 			if(leftMove != 0) {
 				int x = (int)(myBlock.nowPosition.x - leftMove);
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
 			if(rightMove != 9) {
-				int x = (int)(myBlock.nowPosition.x - (rightMove - 19));
+				int x = (int)(myBlock.nowPosition.x - (rightMove - 9));
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
-			
+
+			index = 0;
 			for(int y = 0; y < 5; y++) {
 				for(int x = 0; x < 5; x++) {
 					myBlock.square[y, x] = afterBlock[y, x];
 					if(myBlock.square[y, x] == 1) {
 						map[y + (int)myBlock.nowPosition.y, x + (int)myBlock.nowPosition.x] = BLOCKSTATE.USING;
+						myBlock.blockPosition[index] = new Vector2(x, y);
+						index++;
 					}
 				}
 			}
@@ -749,7 +811,7 @@ public class Game : MonoBehaviour {
 			}
 
 			// 下キーで落下させ続ける処理
-			if(Input.GetKey(KeyCode.DownArrow))
+			if(speedUp && Input.GetKey(KeyCode.DownArrow))
 			{
 				downTime = 0.01f;
 				nextScore++;
@@ -783,6 +845,8 @@ public class Game : MonoBehaviour {
 
 				timer = 0.0f;
 			}
+
+			Ghost ();
 		}
 		MapCreate ();
 	}
