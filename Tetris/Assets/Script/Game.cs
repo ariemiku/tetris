@@ -360,14 +360,6 @@ public class Game : MonoBehaviour {
 			}
 		}
 
-		// ゴーストと落下中のブロックが重なった時、ブロックを表示するため
-		for (int i = 0; i < 4; i++) {
-			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
-			if(map[y + (int)myBlock.blockPosition[i].y - 1, x] == BLOCKSTATE.USING) {
-				return;
-			}
-		}
-
 		// ゴースト更新
 		for(int j = 0; j < 20; j++) {
 			for(int i = 0; i < 10; i++) {
@@ -378,6 +370,9 @@ public class Game : MonoBehaviour {
 		}
 		for(int i = 0; i < 4; i++) {
 			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+			if(map[y + (int)myBlock.blockPosition[i].y - 1, x] == BLOCKSTATE.USING) {
+				continue;
+			}
 			map[y + (int)myBlock.blockPosition[i].y - 1, x] = BLOCKSTATE.GHOST;
 		}
 	}
@@ -756,12 +751,12 @@ public class Game : MonoBehaviour {
 			// テトリミノの速度を変化させる
 			if(blockCount >= 10) {
 				if(downTime > 0.01) {
-					nowSpeed -= 0.01f;
+					nowSpeed -= 0.05f;
 					downTime = nowSpeed;
+					blockCount = 0;
 				} else {
 					downTime = 0.01f;
 				}
-				blockCount = 0;
 			}
 
 			// 右回転をXキーで行う
