@@ -480,8 +480,8 @@ public class Game : MonoBehaviour {
 			for(int i = 0; i < index; i++) {
 				for(int x = 0; x < 10; x++) {
 					Renderer renderer = m_aObject [deleteY[i], x].GetComponent<Renderer> ();
-					if((deleteTimer >= 0.25f && deleteTimer < 0.5f) || 
-					   (deleteTimer >= 0.75f && deleteTimer < 1.0f)) {
+					if((deleteTimer > 0.2f && deleteTimer <= 0.4f) || 
+					   (deleteTimer > 0.6f)) {
 						// 色を変える
 						renderer.material = new Material (deleteColor);
 					}
@@ -951,7 +951,7 @@ public class Game : MonoBehaviour {
 
 			Ghost ();
 		}
-		if(deleteTimer >= 1) {
+		if(deleteTimer >= 0.8f) {
 			// ブロックが消えるか
 			DeleteBlock ();
 			
