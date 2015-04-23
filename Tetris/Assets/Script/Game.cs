@@ -25,6 +25,17 @@ enum BLOCKSTATE {
 	USING,
 };
 
+enum BLOCKCOLOR {
+	RED,
+	BLUE,
+	LIGHT_BLUE,
+	YELLO,
+	YELLO_GREEN,
+	PURPLE,
+	ORANGE,
+	NONE,
+};
+
 public class Game : MonoBehaviour {
 	const int I_TETRIMINO = 0;
 	const int O_TETRIMINO = 1;
@@ -42,13 +53,17 @@ public class Game : MonoBehaviour {
 
 	// 20*10
 	BLOCKSTATE[,] map = new BLOCKSTATE[20,10];
+	BLOCKCOLOR[,] color = new BLOCKCOLOR[20,10];
+
+	BLOCKCOLOR nowColor;
 
 	bool gameoverFlag;
 	bool speedUp;
 
-	public Material nowColor;
+	public Material nowColorMaterial;
 	public Material nextColor;
 	public Material backColor;
+	public Material deleteColor;
 	public Material gost;
 	public Material red;
 	public Material blue;
@@ -83,11 +98,17 @@ public class Game : MonoBehaviour {
 	bool downKeyStart;
 	float rigidTime = 0.1f;
 
+	bool deleteFlag;
+	int[] deleteY = new int[4];
+	int index = 0;
+	float deleteTimer = 0.0f;
+
 	int blockCount = 0;
 
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
+
 		myBlock.square = new int[5, 5];
 		myBlock.blockPosition = new Vector2[4];
 
@@ -109,7 +130,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 2);
 			myBlock.blockPosition[3] = new Vector2(2, 3);
 
-			nowColor = lightBlue;
+			nowColorMaterial = lightBlue;
+			nowColor = BLOCKCOLOR.LIGHT_BLUE;
 
 			break;
 			
@@ -125,7 +147,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 2);
 			myBlock.blockPosition[3] = new Vector2(2, 3);
 
-			nowColor = yello;
+			nowColorMaterial = yello;
+			nowColor = BLOCKCOLOR.YELLO;
 
 			break;
 			
@@ -141,7 +164,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 3);
 			myBlock.blockPosition[3] = new Vector2(3, 2);
 
-			nowColor = yelloGreen;
+			nowColorMaterial = yelloGreen;
+			nowColor = BLOCKCOLOR.YELLO_GREEN;
 
 			break;
 			
@@ -157,7 +181,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 3);
 			myBlock.blockPosition[3] = new Vector2(3, 3);
 
-			nowColor = red;
+			nowColorMaterial = red;
+			nowColor = BLOCKCOLOR.RED;
 
 			break;
 			
@@ -173,7 +198,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 2);
 			myBlock.blockPosition[3] = new Vector2(2, 3);
 
-			nowColor = blue;
+			nowColorMaterial = blue;
+			nowColor = BLOCKCOLOR.BLUE;
 
 			break;
 			
@@ -189,7 +215,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 3);
 			myBlock.blockPosition[3] = new Vector2(3, 3);
 
-			nowColor = orange;
+			nowColorMaterial = orange;
+			nowColor = BLOCKCOLOR.ORANGE;
 
 			break;
 			
@@ -205,7 +232,8 @@ public class Game : MonoBehaviour {
 			myBlock.blockPosition[2] = new Vector2(2, 3);
 			myBlock.blockPosition[3] = new Vector2(3, 2);
 
-			nowColor = purple;
+			nowColorMaterial = purple;
+			nowColor = BLOCKCOLOR.PURPLE;
 
 			break;
 			
@@ -342,9 +370,12 @@ public class Game : MonoBehaviour {
 	{
 		// 使用済みブロック、床に衝突するまでの長さを求める
 		int y;
-		for(y = 0; y < 20; y++) {
+		for(y = (int)myBlock.nowPosition.y; y < 20; y++) {
 			bool empty = true;
 			for(int i = 0; i < 4 && empty; i++) {
+				if(y + myBlock.blockPosition[i].y < 0) {
+					continue;
+				}
 				int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
 				if(y + myBlock.blockPosition[i].y >= 20) {
 					empty = false;
@@ -370,6 +401,9 @@ public class Game : MonoBehaviour {
 		}
 		for(int i = 0; i < 4; i++) {
 			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+			if((y + myBlock.blockPosition[i].y - 1) < 0) {
+				continue;
+			}
 			if(map[y + (int)myBlock.blockPosition[i].y - 1, x] == BLOCKSTATE.USING) {
 				continue;
 			}
@@ -392,16 +426,68 @@ public class Game : MonoBehaviour {
 					// 色を変える
 					renderer.material = new Material (backColor);
 					break;
+				case BLOCKSTATE.USED:
+					switch(color[y, x]) {
+					case BLOCKCOLOR.RED:
+						// 色を変える
+						renderer.material = new Material (red);
+						break;
+					case BLOCKCOLOR.BLUE:
+						// 色を変える
+						renderer.material = new Material (blue);
+						break;
+					case BLOCKCOLOR.LIGHT_BLUE:
+						// 色を変える
+						renderer.material = new Material (lightBlue);
+						break;
+					case BLOCKCOLOR.YELLO:
+						// 色を変える
+						renderer.material = new Material (yello);
+						break;
+					case BLOCKCOLOR.YELLO_GREEN:
+						// 色を変える
+						renderer.material = new Material (yelloGreen);
+						break;
+					case BLOCKCOLOR.PURPLE:
+						// 色を変える
+						renderer.material = new Material (purple);
+						break;
+					case BLOCKCOLOR.ORANGE:
+						// 色を変える
+						renderer.material = new Material (orange);
+						break;
+					default:
+						break;
+					}
+					break;
 				case BLOCKSTATE.GHOST:
 					// 色を変える
 					renderer.material = new Material (gost);
 					break;
 				case BLOCKSTATE.USING:
 					// 色を変える
-					renderer.material = new Material (nowColor);
+					renderer.material = new Material (nowColorMaterial);
 					break;
 				default:
 					break;
+				}
+			}
+		}
+
+		if (deleteFlag) {
+			deleteTimer += Time.deltaTime;
+
+			for(int i = 0; i < index; i++) {
+				for(int x = 0; x < 10; x++) {
+					Renderer renderer = m_aObject [deleteY[i], x].GetComponent<Renderer> ();
+					if((deleteTimer >= 0.25f && deleteTimer < 0.5f) || 
+					   (deleteTimer >= 0.75f && deleteTimer < 1.0f)) {
+						// 色を変える
+						renderer.material = new Material (deleteColor);
+					}
+					else {
+						renderer.material = new Material (backColor);
+					}
 				}
 			}
 		}
@@ -410,31 +496,23 @@ public class Game : MonoBehaviour {
 	// ブロックがそろった時に消して列をずらす関数
 	void DeleteBlock ()
 	{
-		// 横ライン確認
-		for (int j = (int)myBlock.nowPosition.y; j < myBlock.nowPosition.y + 5 && j < 20; j++) {
-			int count = 0;
-			for(int i = 0; i < 10; i++) {
-				if(map[j, i] == BLOCKSTATE.USED) {
-					count++;
-				}
-				// 削除処理
-				if(count >= 10) {
-					for(int x = 0; x < 10; x++) {
-						map[j, x] = BLOCKSTATE.EMPTY;
-					}
-					// 下に下げる処理
-					for(int y = j; y > 0; y--) {
-						for(int x = 0; x < 10; x++) {
-							map[y, x] = map[y-1, x];
-						}
-					}
-					for(int x = 0; x < 10; x++) {
-						map[0, x] = BLOCKSTATE.EMPTY;
-					}
-					scoreLineCount++;
+		for(int j = 0; j < index; j++) {
+			for(int x = 0; x < 10; x++) {
+				map[deleteY[j], x] = BLOCKSTATE.EMPTY;
+			}
+			// 下に下げる処理
+			for(int y = deleteY[j]; y > 0; y--) {
+				for(int x = 0; x < 10; x++) {
+					map[y, x] = map[y-1, x];
+					color[y, x] = color[y-1, x];
 				}
 			}
+			for(int x = 0; x < 10; x++) {
+				map[0, x] = BLOCKSTATE.EMPTY;
+			}
 		}
+
+		scoreLineCount = index;
 	}
 
 	// スコア
@@ -443,8 +521,7 @@ public class Game : MonoBehaviour {
 			score+=1;
 		else
 			score+=nextScore;
-		
-		DeleteBlock();
+
 		switch(scoreLineCount)
 		{
 		case 1:
@@ -700,6 +777,7 @@ public class Game : MonoBehaviour {
 			for(int j=0;j<10;j++)
 			{
 				map[i,j] = BLOCKSTATE.EMPTY;
+				color[i,j] = BLOCKCOLOR.NONE;
 			}
 		}
 
@@ -738,12 +816,13 @@ public class Game : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		Resources.UnloadUnusedAssets ();
+
 		// ゲームオーバーの時
 		if (gameoverFlag == true)
 		{
 			GameOver ();
 		} 
-		else
+		else if(!deleteFlag)
 		{
 			// 時間の取得
 			timer += Time.deltaTime;
@@ -819,29 +898,69 @@ public class Game : MonoBehaviour {
 			{
 				// ブロックが止まった
 				if(!MoveBlock ()) {
-					// ブロックを使用済みに変更
-					for(int y = 0; y < 20; y++) {
-						for(int x = 0; x < 10; x++) {
-							if(map[y, x] == BLOCKSTATE.USING) {
-								map[y, x] = BLOCKSTATE.USED;
-							}
+					// ゲームオーバーか
+					for(int i = 0; i < 4; i++) {
+						int y = (int)(myBlock.blockPosition[i].y + myBlock.nowPosition.y);
+						if(y < 0) {
+							gameoverFlag = true;
+							break;
 						}
 					}
 
-					// ブロックが消えるか
-					DeleteBlock ();
-					
-					// スコア
-					Score ();
 
-					// 次のブロックをセット
-					SetBlockType ();
+					MapCreate ();
+
+					if(!gameoverFlag) {
+						// ブロックを使用済みに変更
+						for(int y = 0; y < 20; y++) {
+							for(int x = 0; x < 10; x++) {
+								if(map[y, x] == BLOCKSTATE.USING) {
+									map[y, x] = BLOCKSTATE.USED;
+									color[y, x] = nowColor;
+								}
+							}
+						}
+
+						// 横ライン確認
+						for (int y = (int)myBlock.nowPosition.y; y < myBlock.nowPosition.y + 5 && y < 20; y++) {
+							if(y < 0) {
+								continue;
+							}
+							int count = 0;
+							for (int x = 0; x < 10; x++) {
+								if (map [y, x] == BLOCKSTATE.USED) {
+									count++;
+								}
+							}
+						
+							if(count >= 10) {
+								deleteY[index] = y;
+								index++;
+							
+								deleteFlag = true;
+							}
+						}
+
+						// 次のブロックをセット
+						SetBlockType ();
+					}
 				}
 
 				timer = 0.0f;
 			}
 
 			Ghost ();
+		}
+		if(deleteTimer >= 1) {
+			// ブロックが消えるか
+			DeleteBlock ();
+			
+			// スコア
+			Score ();
+
+			index = 0;
+			deleteTimer = 0.0f;
+			deleteFlag = false;
 		}
 		MapCreate ();
 	}
