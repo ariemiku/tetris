@@ -891,7 +891,14 @@ public class Game : MonoBehaviour {
 				nextScore++;
 			}
 			else {
-				downTime = nowSpeed;
+				for (int i = 0; i < 4; i++) {
+					int y = (int)(myBlock.nowPosition.y + myBlock.blockPosition[i].y);
+					if(y < 0) {
+						downTime = 0.5f;
+						break;
+					}
+					downTime = nowSpeed;
+				}
 			}
 			// ブロックを自然落下させる
 			if (timer >= downTime) 
