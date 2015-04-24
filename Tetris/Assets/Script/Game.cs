@@ -913,7 +913,7 @@ public class Game : MonoBehaviour {
 			}
 
 			// ブロックの位置を右に移動させる
-			if (Input.GetKey (KeyCode.RightArrow)) 
+			if (Input.GetKey (KeyCode.RightArrow) && !Input.GetKey(KeyCode.LeftArrow)) 
 			{
 				// ブロックの落下が終わった場合、すべっている時間を計算する
 				if(StopBlock()){
@@ -931,7 +931,7 @@ public class Game : MonoBehaviour {
 			}
 
 			// ブロックの位置を左に移動させる
-			if (Input.GetKey (KeyCode.LeftArrow)) 
+			if (Input.GetKey (KeyCode.LeftArrow) && !Input.GetKey(KeyCode.RightArrow)) 
 			{
 				// ブロックの落下が終わった場合、すべっている時間を計算する
 				if(StopBlock()){
