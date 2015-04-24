@@ -475,22 +475,62 @@ public class Game : MonoBehaviour {
 		}
 
 		if (deleteFlag) {
-			deleteTimer += Time.deltaTime;
+			ChangeDeleteColor();
+		}
+	}
 
-			for(int i = 0; i < index; i++) {
-				for(int x = 0; x < 10; x++) {
-					Renderer renderer = m_aObject [deleteY[i], x].GetComponent<Renderer> ();
-					if((deleteTimer > 0.2f && deleteTimer <= 0.4f) || 
-					   (deleteTimer > 0.6f)) {
-						// 色を変える
-						renderer.material = new Material (deleteColor);
+	// ブロックが消える時の色の点滅処理
+	void ChangeDeleteColor()
+	{
+		BLOCKCOLOR[,] formerDeleteColor = new BLOCKCOLOR[4, 10];
+		for (int i = 0; i < index; i++) {
+			for (int x = 0; x < 10; x++) {
+				formerDeleteColor[i,x]=color[deleteY[i], x];
+			}
+		}
+
+		deleteTimer += Time.deltaTime;
+		
+		for(int i = 0; i < index; i++) {
+			for(int x = 0; x < 10; x++) {
+				Renderer renderer = m_aObject [deleteY[i], x].GetComponent<Renderer> ();
+				if((deleteTimer > 0.2f && deleteTimer <= 0.4f) || 
+				   (deleteTimer > 0.6f)) {
+					// 元々の色をセットする
+					switch(formerDeleteColor[i,x]){
+					case BLOCKCOLOR.RED:
+						deleteColor = red;
+						break;
+					case BLOCKCOLOR.BLUE:
+						deleteColor = blue;
+						break;
+					case BLOCKCOLOR.LIGHT_BLUE:
+						deleteColor = lightBlue;
+						break;
+					case BLOCKCOLOR.YELLO:
+						deleteColor = yello;
+						break;
+					case BLOCKCOLOR.YELLO_GREEN:
+						deleteColor = yelloGreen;
+						break;
+					case BLOCKCOLOR.PURPLE:
+						deleteColor = purple;
+						break;
+					case BLOCKCOLOR.ORANGE:
+						deleteColor = orange;
+						break;
+					default:
+						break;
 					}
-					else {
-						renderer.material = new Material (backColor);
-					}
+					// 色を変える
+					renderer.material = new Material (deleteColor);
+				}
+				else {
+					renderer.material = new Material (backColor);
 				}
 			}
 		}
+
 	}
 
 	// ブロックがそろった時に消して列をずらす関数
