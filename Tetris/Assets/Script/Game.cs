@@ -105,6 +105,9 @@ public class Game : MonoBehaviour {
 
 	int blockCount = 0;
 
+	float stopTime = 0.0f;		// すべり時間
+	float stopTimeMax = 0.5f; 	// 滑れる時間の限度
+
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
@@ -588,6 +591,23 @@ public class Game : MonoBehaviour {
 		scoreText.text = "Score\n"+score;
 	}
 
+	// 自分の下にブロックがあるかどうか返す
+	bool StopBlock(){
+		for (int i = 0; i < 4; i++) {
+			int x = (int)(myBlock.blockPosition[i].x + myBlock.nowPosition.x);
+			int y = (int)(myBlock.blockPosition[i].y + myBlock.nowPosition.y);
+			if(y == 19) {
+				return true;
+			}
+			if(y >= 0) {
+				if(map[y+1, x] == BLOCKSTATE.USED) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	// ブロックの移動
 	bool MoveBlock (KEYCODE keyCode = KEYCODE.NONE) {
 		int moveX = 0;
@@ -895,9 +915,14 @@ public class Game : MonoBehaviour {
 			// ブロックの位置を右に移動させる
 			if (Input.GetKey (KeyCode.RightArrow)) 
 			{
+				// ブロックの落下が終わった場合、すべっている時間を計算する
+				if(StopBlock()){
+					stopTime += Time.deltaTime;
+				}
+
 				downKeyStartTime += Time.deltaTime;
 
-				if(downKeyStartTime >= rigidTime || !downKeyStart) {
+				if((downKeyStartTime >= rigidTime || !downKeyStart) && stopTime <= stopTimeMax) {
 					MoveBlock (KEYCODE.RIGHT_ARROW);
 
 					downKeyStartTime = 0.0f;
@@ -908,9 +933,13 @@ public class Game : MonoBehaviour {
 			// ブロックの位置を左に移動させる
 			if (Input.GetKey (KeyCode.LeftArrow)) 
 			{
+				// ブロックの落下が終わった場合、すべっている時間を計算する
+				if(StopBlock()){
+					stopTime += Time.deltaTime;
+				}
 				downKeyStartTime += Time.deltaTime;
 
-				if(downKeyStartTime >= rigidTime || !downKeyStart) {
+				if((downKeyStartTime >= rigidTime || !downKeyStart) && stopTime <= stopTimeMax) {
 					MoveBlock (KEYCODE.LEFT_ARROW);
 					
 					downKeyStartTime = 0.0f;
@@ -922,6 +951,7 @@ public class Game : MonoBehaviour {
 			if(!Input.GetKey (KeyCode.RightArrow) && !Input.GetKey (KeyCode.LeftArrow)) {
 				downKeyStartTime = 0.0f;
 				downKeyStart = false;
+				stopTime = 0.0f;
 			}
 
 			// 下キーで落下させ続ける処理
@@ -953,7 +983,6 @@ public class Game : MonoBehaviour {
 							break;
 						}
 					}
-
 
 					MapCreate ();
 
