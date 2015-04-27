@@ -108,6 +108,8 @@ public class Game : MonoBehaviour {
 	float stopTime = 0.0f;		// すべり時間
 	float stopTimeMax = 0.5f; 	// 滑れる時間の限度
 
+	public int moveNum=0;		// 壁に当たって自動的に移動したマスの数
+
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
 	{
@@ -678,6 +680,24 @@ public class Game : MonoBehaviour {
 		return true;
 	}
 
+	// 回転で自動的に動かしたマスの数を調べる
+	int MoveBlockCount(int leftMove,int rightMove)
+	{
+		int num=0;
+		while(rightMove != 9)
+		{
+			num+=1;
+			rightMove--;
+		}
+		while(leftMove != 0)
+		{
+			num-=1;
+			leftMove++;
+		}
+
+		return num;
+	}
+
 	// ブロックの回転
 	void RotateBlockLeft () {
 		if (nowBlock != O_TETRIMINO) {
@@ -694,6 +714,9 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
+
+			// 前の回転でずらした分だけマスを戻す
+			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
 
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
@@ -738,6 +761,8 @@ public class Game : MonoBehaviour {
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
+
+			moveNum = MoveBlockCount(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
@@ -769,6 +794,9 @@ public class Game : MonoBehaviour {
 				}
 			}
 
+			// 前の回転でずらした分だけマスを戻す
+			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
+
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
@@ -812,6 +840,8 @@ public class Game : MonoBehaviour {
 				int y = (int)(myBlock.nowPosition.y);
 				myBlock.nowPosition = new Vector2(x, y);
 			}
+
+			moveNum = MoveBlockCount(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
