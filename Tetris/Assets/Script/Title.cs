@@ -16,7 +16,7 @@ public class Title : MonoBehaviour {
 				m_aObject[i,j].transform.Translate (5+i,5+j,0);
 				Renderer renderer = m_aObject[i,j].GetComponent<Renderer> ();
 				renderer.material = new Material (renderer.material);
-				renderer.material.color = new Color (0.0f,(float)i*j,1.0f);
+				renderer.material.color = new Color (0.0f,0.5f + (0.5f*((float)i*j)),1.0f);
 			}
 		}
 	}

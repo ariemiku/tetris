@@ -681,7 +681,7 @@ public class Game : MonoBehaviour {
 	}
 
 	// 回転で自動的に動かしたマスの数を調べる
-	int MoveBlockCount(int leftMove,int rightMove)
+	int CountSideMoveBlock(int leftMove,int rightMove)
 	{
 		int num=0;
 		while(rightMove != 9)
@@ -696,6 +696,34 @@ public class Game : MonoBehaviour {
 		}
 
 		return num;
+	}
+	
+	// ブロックが上にはみ出ているか調べ、上にはみ出ているマスのトップを返す
+	int ChackOverTopBlock(Vector2[] pos)
+	{
+		int overY=0;
+		for(int i=0;i<4;i++)
+		{
+			int y = (int)(pos[i].y + myBlock.nowPosition.y);
+			
+			if(y<0)
+			{
+				overY+=1;
+			}
+		}
+		
+		int downMove=0;
+		if((overY!=0 || overY!=4) && myBlock.nowPosition.y > -3)
+		{
+			for(int i = 0; i < 4; i++) {
+				int y = (int)(pos[i].y + myBlock.nowPosition.y);
+				if(downMove > y) {
+					downMove = y;
+				}
+			}
+		}
+
+		return downMove;
 	}
 
 	// ブロックの回転
@@ -718,10 +746,14 @@ public class Game : MonoBehaviour {
 			// 前の回転でずらした分だけマスを戻す
 			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
 
+			int downMove=0;
+			downMove=ChackOverTopBlock(position);
+
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
-				int y = (int)(position[i].y + myBlock.nowPosition.y);
+				int y = (int)(position[i].y + (myBlock.nowPosition.y-downMove));
+
 				if(y < 0 || y >= 20) {
 					return;
 				}
@@ -738,6 +770,10 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
+
+			int mx = (int)(myBlock.nowPosition.x);
+			int my = (int)(myBlock.nowPosition.y-downMove);
+			myBlock.nowPosition = new Vector2(mx, my);
 
 			// 壁にぶつかった時に横にずれて回転する
 			int leftMove = 0;
@@ -762,7 +798,7 @@ public class Game : MonoBehaviour {
 				myBlock.nowPosition = new Vector2(x, y);
 			}
 
-			moveNum = MoveBlockCount(leftMove,rightMove);
+			moveNum = CountSideMoveBlock(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
@@ -797,10 +833,13 @@ public class Game : MonoBehaviour {
 			// 前の回転でずらした分だけマスを戻す
 			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
 
+			int downMove=0;
+			downMove=ChackOverTopBlock(position);
+
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
-				int y = (int)(position[i].y + myBlock.nowPosition.y);
+				int y = (int)(position[i].y + myBlock.nowPosition.y - downMove);
 				if(y < 0 || y >= 20) {
 					return;
 				}
@@ -817,6 +856,10 @@ public class Game : MonoBehaviour {
 					}
 				}
 			}
+
+			int mx = (int)(myBlock.nowPosition.x);
+			int my = (int)(myBlock.nowPosition.y-downMove);
+			myBlock.nowPosition = new Vector2(mx, my);
 
 			// 壁にぶつかった時に横にずれて回転する
 			int leftMove = 0;
@@ -841,7 +884,7 @@ public class Game : MonoBehaviour {
 				myBlock.nowPosition = new Vector2(x, y);
 			}
 
-			moveNum = MoveBlockCount(leftMove,rightMove);
+			moveNum = CountSideMoveBlock(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
