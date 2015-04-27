@@ -699,7 +699,7 @@ public class Game : MonoBehaviour {
 	}
 	
 	// ブロックが上にはみ出ているか調べ、上にはみ出ているマスのトップを返す
-	int ChackOverTopBlock(Vector2[] pos)
+	int CheckOverTopBlock(Vector2[] pos)
 	{
 		int overY=0;
 		for(int i=0;i<4;i++)
@@ -747,7 +747,7 @@ public class Game : MonoBehaviour {
 			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
 
 			int downMove=0;
-			downMove=ChackOverTopBlock(position);
+			downMove=CheckOverTopBlock(position);
 
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
@@ -834,7 +834,7 @@ public class Game : MonoBehaviour {
 			myBlock.nowPosition.x= myBlock.nowPosition.x+moveNum;
 
 			int downMove=0;
-			downMove=ChackOverTopBlock(position);
+			downMove=CheckOverTopBlock(position);
 
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
