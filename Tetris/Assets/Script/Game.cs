@@ -109,6 +109,8 @@ public class Game : MonoBehaviour {
 	float stopTimeMax = 0.5f; 	// 滑れる時間の限度
 
 	public int moveNum=0;		// 壁に当たって自動的に移動したマスの数
+	public bool rightRotate=false;
+	public bool leftRotate=false;
 
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
@@ -677,6 +679,10 @@ public class Game : MonoBehaviour {
 			map[y, x] = BLOCKSTATE.USING;
 		}
 
+		moveNum = 0;
+		rightRotate = false;
+		leftRotate = false;
+
 		return true;
 	}
 
@@ -726,9 +732,91 @@ public class Game : MonoBehaviour {
 		return downMove;
 	}
 
+
+	// 重なったブロックと反対側をみてずらせるか確認する
+	bool CheckOtherSpace(Vector2[] pos, int x){
+		int left=x;
+		int right=x;
+		for(int i = 0; i < 4; i++) {
+			int originalx = (int)(pos[i].x + myBlock.nowPosition.x);
+			if(left > originalx) {
+				left = originalx;
+			}
+			if(right < originalx) {
+				right = originalx;
+			}
+		}
+
+		if(right!=x && ((x-left+1) == 1 || (x-left+1) == 2)){
+			// 右に移動
+			for(int j=0;j<4;j++){
+				int originalx = (int)(pos[j].x + myBlock.nowPosition.x + (x-left+1));
+				if(originalx > 9 || map[(int)(pos[j].y + myBlock.nowPosition.y),originalx] == BLOCKSTATE.USED){
+					return false;
+				}
+				if(j==3){
+					myBlock.nowPosition.x = myBlock.nowPosition.x+(x-left+1);
+					moveNum = -(x-left+1);
+					return true;
+				}
+			}
+		}
+		
+		if(left!=x && ((right-x+1) == 1 || (right-x+1) == 2)){
+			// 左に移動
+			for(int j=0;j<4;j++){
+				int originalx = (int)(pos[j].x + myBlock.nowPosition.x - (right-x+1));
+				if(originalx < 0 || map[(int)(pos[j].y + myBlock.nowPosition.y),originalx] == BLOCKSTATE.USED){
+					return false;
+				}
+				if(j==3){
+					myBlock.nowPosition.x = myBlock.nowPosition.x-(right-x+1);
+					moveNum = right-x+1;
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	// 壁にぶつかった時に横にずれて回転させる
+	void KickWall(Vector2[] pos){
+		int leftMove = 0;
+		int rightMove = 9;
+		for(int i = 0; i < 4; i++) {
+			int x = (int)(pos[i].x + myBlock.nowPosition.x);
+			if(leftMove > x) {
+				leftMove = x;
+			}
+			if(rightMove < x) {
+				rightMove = x;
+			}
+		}
+		if(leftMove != 0) {
+			int x = (int)(myBlock.nowPosition.x - leftMove);
+			int y = (int)(myBlock.nowPosition.y);
+			myBlock.nowPosition = new Vector2(x, y);
+		}
+		if(rightMove != 9) {
+			int x = (int)(myBlock.nowPosition.x - (rightMove - 9));
+			int y = (int)(myBlock.nowPosition.y);
+			myBlock.nowPosition = new Vector2(x, y);
+		}
+		
+		moveNum = CountSideMoveBlock(leftMove,rightMove);
+	}
+	
+	
 	// ブロックの回転
 	void RotateBlockLeft () {
 		if (nowBlock != O_TETRIMINO) {
+			if(rightRotate){
+				moveNum=0;
+				rightRotate=false;
+			}
+			leftRotate=true;
+			
 			// 回転後のブロックを作成
 			int[,] afterBlock = new int[5, 5];
 			int index = 0;
@@ -749,6 +837,8 @@ public class Game : MonoBehaviour {
 			int downMove=0;
 			downMove=CheckOverTopBlock(position);
 
+			bool kickBlockWall = false;
+
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
@@ -759,10 +849,26 @@ public class Game : MonoBehaviour {
 				}
 				if(x >= 0 && x < 10) {
 					if(map[y, x] == BLOCKSTATE.USED) {
-						return;
+						if(i==4 && map[(int)(position[i-1].y + (myBlock.nowPosition.y-downMove)),
+						               (int)(position[i-1].x + myBlock.nowPosition.x)]==BLOCKSTATE.USED){
+							x=(int)(position[i-1].x + myBlock.nowPosition.x);
+						}
+						if(i==0 && map[(int)(position[i+1].y + (myBlock.nowPosition.y-downMove)),
+						               (int)(position[i+1].x + myBlock.nowPosition.x)]==BLOCKSTATE.USED){
+							x=(int)(position[i+1].x + myBlock.nowPosition.x);
+						}
+
+						if(!CheckOtherSpace(position,x)){
+							return;
+						}
+						else{
+							kickBlockWall=true;
+							break;
+						}
 					}
 				}
 			}
+
 			for(int y = 0; y < 20; y++) {
 				for(int x = 0; x < 10; x++) {
 					if(map[y, x] == BLOCKSTATE.USING) {
@@ -775,30 +881,10 @@ public class Game : MonoBehaviour {
 			int my = (int)(myBlock.nowPosition.y-downMove);
 			myBlock.nowPosition = new Vector2(mx, my);
 
-			// 壁にぶつかった時に横にずれて回転する
-			int leftMove = 0;
-			int rightMove = 9;
-			for(int i = 0; i < 4; i++) {
-				int x = (int)(position[i].x + myBlock.nowPosition.x);
-				if(leftMove > x) {
-					leftMove = x;
-				}
-				if(rightMove < x) {
-					rightMove = x;
-				}
+			// 壁にぶつかった時に横にずれて回転させる
+			if(!kickBlockWall){
+				KickWall(position);
 			}
-			if(leftMove != 0) {
-				int x = (int)(myBlock.nowPosition.x - leftMove);
-				int y = (int)(myBlock.nowPosition.y);
-				myBlock.nowPosition = new Vector2(x, y);
-			}
-			if(rightMove != 9) {
-				int x = (int)(myBlock.nowPosition.x - (rightMove - 9));
-				int y = (int)(myBlock.nowPosition.y);
-				myBlock.nowPosition = new Vector2(x, y);
-			}
-
-			moveNum = CountSideMoveBlock(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
@@ -816,6 +902,12 @@ public class Game : MonoBehaviour {
 
 	void RotateBlockRight () {
 		if (nowBlock != O_TETRIMINO) {
+			if(leftRotate){
+				moveNum=0;
+				leftRotate=false;
+			}
+			rightRotate=true;
+			
 			// 回転後のブロックを作成
 			int[,] afterBlock = new int[5, 5];
 			int index = 0;
@@ -836,6 +928,8 @@ public class Game : MonoBehaviour {
 			int downMove=0;
 			downMove=CheckOverTopBlock(position);
 
+			bool kickBlockWall = false;
+			
 			// 回転できるか
 			for(int i = 0; i < 4; i++) {
 				int x = (int)(position[i].x + myBlock.nowPosition.x);
@@ -845,7 +939,22 @@ public class Game : MonoBehaviour {
 				}
 				if(x >= 0 && x < 10) {
 					if(map[y, x] == BLOCKSTATE.USED) {
-						return;
+						if(i==4 && map[(int)(position[i-1].y + (myBlock.nowPosition.y-downMove)),
+						               (int)(position[i-1].x + myBlock.nowPosition.x)]==BLOCKSTATE.USED){
+							x=(int)(position[i-1].x + myBlock.nowPosition.x);
+						}
+						if(i==0 && map[(int)(position[i+1].y + (myBlock.nowPosition.y-downMove)),
+						               (int)(position[i+1].x + myBlock.nowPosition.x)]==BLOCKSTATE.USED){
+							x=(int)(position[i+1].x + myBlock.nowPosition.x);
+						}
+						
+						if(!CheckOtherSpace(position,x)){
+							return;
+						}
+						else{
+							kickBlockWall=true;
+							break;
+						}
 					}
 				}
 			}
@@ -861,30 +970,10 @@ public class Game : MonoBehaviour {
 			int my = (int)(myBlock.nowPosition.y-downMove);
 			myBlock.nowPosition = new Vector2(mx, my);
 
-			// 壁にぶつかった時に横にずれて回転する
-			int leftMove = 0;
-			int rightMove = 9;
-			for(int i = 0; i < 4; i++) {
-				int x = (int)(position[i].x + myBlock.nowPosition.x);
-				if(leftMove > x) {
-					leftMove = x;
-				}
-				if(rightMove < x) {
-					rightMove = x;
-				}
+			// 壁にぶつかった時に横にずれて回転させる
+			if(!kickBlockWall){
+				KickWall(position);
 			}
-			if(leftMove != 0) {
-				int x = (int)(myBlock.nowPosition.x - leftMove);
-				int y = (int)(myBlock.nowPosition.y);
-				myBlock.nowPosition = new Vector2(x, y);
-			}
-			if(rightMove != 9) {
-				int x = (int)(myBlock.nowPosition.x - (rightMove - 9));
-				int y = (int)(myBlock.nowPosition.y);
-				myBlock.nowPosition = new Vector2(x, y);
-			}
-
-			moveNum = CountSideMoveBlock(leftMove,rightMove);
 
 			index = 0;
 			for(int y = 0; y < 5; y++) {
@@ -1056,6 +1145,10 @@ public class Game : MonoBehaviour {
 							break;
 						}
 					}
+
+					moveNum=0;
+					rightRotate=false;
+					leftRotate=false;
 
 					MapCreate ();
 
