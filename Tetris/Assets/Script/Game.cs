@@ -109,8 +109,8 @@ public class Game : MonoBehaviour {
 	float stopTimeMax = 0.5f; 	// 滑れる時間の限度
 
 	public int moveNum=0;		// 壁に当たって自動的に移動したマスの数
-	public bool rightRotate=false;
-	public bool leftRotate=false;
+	public bool rightRotate=false;	// 右回転を行っている状態かどうか
+	public bool leftRotate=false;	// 左回転を行っている状態かどうか
 
 	// ブロックの種類をランダムで選択し、セットする関数
 	void SetBlockType ()
@@ -633,6 +633,7 @@ public class Game : MonoBehaviour {
 			break;
 		}
 
+		// ブロックが出現し終わるまで左右移動や落下を制限する
 		for(int i = 0; i < 4; i++) {
 			int y = (int)(myBlock.blockPosition[i].y + myBlock.nowPosition.y);
 			if(y < 0) {
@@ -704,7 +705,7 @@ public class Game : MonoBehaviour {
 		return num;
 	}
 	
-	// ブロックが上にはみ出ているか調べ、上にはみ出ているマスのトップを返す
+	// ブロックが	枠から上にはみ出ているか調べ、上にはみ出ているマスのトップを返す
 	int CheckOverTopBlock(Vector2[] pos)
 	{
 		int overY=0;
@@ -733,7 +734,7 @@ public class Game : MonoBehaviour {
 	}
 
 
-	// 重なったブロックと反対側をみてずらせるか確認する
+	// 壁のようになっているブロックを背にしたとき、反対側を見てずらして回転できるかどうか確認する
 	bool CheckOtherSpace(Vector2[] pos, int x){
 		int left=x;
 		int right=x;
@@ -766,7 +767,8 @@ public class Game : MonoBehaviour {
 			// 左に移動
 			for(int j=0;j<4;j++){
 				int originalx = (int)(pos[j].x + myBlock.nowPosition.x - (right-x+1));
-				if(originalx < 0 || map[(int)(pos[j].y + myBlock.nowPosition.y),originalx] == BLOCKSTATE.USED){
+				if(originalx < 0 || pos[j].y + myBlock.nowPosition.y < 0 || 
+				   map[(int)(pos[j].y + myBlock.nowPosition.y),originalx] == BLOCKSTATE.USED){
 					return false;
 				}
 				if(j==3){
@@ -808,7 +810,7 @@ public class Game : MonoBehaviour {
 	}
 	
 	
-	// ブロックの回転
+	// ブロックの左回転
 	void RotateBlockLeft () {
 		if (nowBlock != O_TETRIMINO) {
 			if(rightRotate){
@@ -900,6 +902,7 @@ public class Game : MonoBehaviour {
 		}
 	}
 
+	// ブロックの右回転
 	void RotateBlockRight () {
 		if (nowBlock != O_TETRIMINO) {
 			if(leftRotate){
